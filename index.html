@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+       <title>CertiFlow</title>
+    <link rel="stylesheet" href="CSS/reset.css" />
+    <link rel="stylesheet" href="CSS/styles.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="img/logo.png">
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-left">
+        <!--?SVG aqui afegire el SVG del meu logo-->
+        <div class="svg-placeholder">
+          <svg viewBox="0 0 100 100" class="animated-svg">
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="var(--color-accent)"
+              stroke-width="3"
+            >
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from="0 50 50"
+                to="360 50 50"
+                dur="10s"
+                repeatCount="indefinite"
+              />
+            </circle>
+            <text
+              x="50"
+              y="55"
+              font-family="Roboto"
+              font-size="10"
+              fill="var(--color-text-primary)"
+              text-anchor="middle"
+            >
+              LOGIN
+            </text>
+          </svg>
+        </div>
+        <h1>Benvingut/da</h1>
+        <p>Accedeix al teu compte de forma segura.</p>
+      </div>
+<!--?Formulari de login-->
+      <div class="login-right">
+        <h2>Inicia Sessió</h2>
+        <form id="loginForm" class="login-form">
+          <div class="input-group">
+            <input
+              type="email"
+              id="email"
+              required
+              autocomplete="email"
+              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+              data-label="Correu Electrònic"
+            />
+            <label for="email" class="floating-label">Correu Electrònic</label>
+          </div>
+
+          <div class="input-group">
+            <input
+              type="password"
+              id="password"
+              required
+              autocomplete="current-password"
+              data-label="Contrasenya"
+            />
+            <label for="password" class="floating-label">Contrasenya</label>
+          </div>
+
+          <button type="submit" id="loginButton">Accedir</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="JS/script.js"></script>
+  </body>
+</html>
