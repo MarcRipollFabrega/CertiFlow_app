@@ -1,0 +1,605 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+/* ========================================================================= */
+/* VARIABLES CSS (ROOT) - MODE FOSC (BASE) */
+/* ========================================================================= */
+
+:root {
+  /* MODE FOSC (Base: 37353E | 44444E | 715A5A | D3DAD9) */
+  --color-background: #37353e;
+  --color-surface: #44444e; /* Per a menús, targetes, etc. */
+  --color-text-primary: #d3dad9; /* Text principal (Beix Clar) */
+  --color-text-secondary: #715a5a; /* Text secundari, fons */
+  --color-accent: #039734; /* Verd principal */
+  --shadow-dark: rgba(0, 0, 0, 0.4);
+
+  /* VARIABLES D'INPUTS I BOTONS (Basades en el Mode Fosc) */
+  --color-input-background: #3a4750; /* Fons més fosc que surface */
+  --color-input-text: white;
+  --color-input-border: #444; /* Vora fosca */
+  --color-button-primary: var(--color-accent);
+  --color-button-primary-hover: #027a29;
+  --color-text-on-accent: white; /* Text que va sobre el color accent */
+}
+
+/* ========================================================================= */
+/* 1. LAYOUT BASE I BARRA SUPERIOR */
+/* ========================================================================= */
+
+body {
+  margin: 0;
+  /* El body padding ha de tenir en compte la barra superior (50px) i la barra inferior (30px) + el menú (80px) */
+  padding-top: 50px;
+  padding-bottom: 120px; 
+  font-family: "Poppins", sans-serif;
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  background-image: url("img/fons.jpg"); 
+  background-size: cover; 
+  background-attachment: fixed;
+  background-color: var(--color-background); /* Color de fallback i transició */
+  transition: background-color 0.3s ease;
+}
+
+/* Classe per ajustar el padding quan el menú està amagat */
+body.menu-hidden {
+    /* 50px (capçalera) + 30px (footer) + 10px (barra visible del menú) */
+    padding-bottom: 90px;
+}
+
+#main-content {
+  padding: 20px;
+}
+
+/* BARRA SUPERIOR */
+.top-app-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  z-index: 1000;
+  
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-surface);
+  box-shadow: 0 2px 5px var(--shadow-dark);
+}
+
+/* LOGO */
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+.logo-icon {
+  height: 30px;
+  margin-right: 8px;
+   filter: brightness(1.5) saturate(1.2) drop-shadow(0 0 2px var(--color-surface));
+}
+.app-logo {
+  font-family: "Lato", sans-serif;
+  font-weight: 900;
+  font-size: 1.5em;
+  color: var(--color-text-primary);
+  letter-spacing: 0.5px;
+}
+.logo-accent {
+  color: var(--color-accent);
+}
+
+/* ========================================================================= */
+/* 2. SWITCH (DARK/LIGHT MODE) */
+/* ========================================================================= */
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* SLIDER (PISTA) - Color no actiu (Mode Fosc) */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-text-secondary); 
+  transition: 0.4s;
+}
+
+/* BOTÓ CIRCULAR */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: var(--color-text-on-accent); 
+  transition: 0.4s;
+}
+
+/* SLIDER (PISTA) - Color actiu (Mode Fosc) */
+input:checked + .slider {
+  background-color: var(--color-accent); 
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* ========================================================================= */
+/* 3. NAVEGACIÓ INFERIOR */
+/* ========================================================================= */
+
+.navigation-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 999;
+  transition: transform 0.3s ease; 
+}
+/* Classe per amagar el menú sencer */
+.navigation-container.hidden-menu {
+  transform: translateY(70px);
+}
+
+.navigation {
+  width: 380px;
+  height: 80px; 
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-surface); 
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -5px 20px var(--shadow-dark);
+  position: relative; 
+}
+.navigation ul {
+  display: flex;
+  width: 100%;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.navigation ul li {
+  position: relative;
+  list-style: none;
+  width: 95px; 
+  height: 80px; 
+  z-index: 1;
+}
+.navigation ul li a {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  text-align: center;
+  font-weight: 500;
+  text-decoration: none; /* Assegurem que no hi hagi subratllat */
+}
+
+/* Icona ESTAT NORMAL */
+.navigation ul li a .icon {
+  position: relative;
+  display: block;
+  line-height: 85px; 
+  font-size: 1.5em;
+  text-align: center;
+  transition: 0.5s;
+  /* 🎨 Colors basats en variables */
+  color: var(--color-text-secondary);
+  filter: drop-shadow(0 0 0.5px var(--color-text-secondary));
+}
+/* Text ESTAT NORMAL */
+.navigation ul li a .text {
+  position: absolute;
+  /* 🎨 Colors basats en variables */
+  color: var(--color-text-primary);
+  opacity: 0.5; /* Opacitat per indicar que no està actiu */
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.05rem;
+  transition: 0.5s;
+  transform: translateY(20px);
+  top: 40px; 
+}
+
+/* ESTAT ACTIU (.active) */
+.navigation ul li.active a .icon {
+  transform: translateY(-20px) scale(1.2);
+  /* 🎨 Colors basats en variables */
+  color: var(--color-accent); 
+  filter: drop-shadow(0 0 2px var(--color-accent));
+}
+.navigation ul li.active a .text {
+  /* 🎨 Colors basats en variables */
+  color: var(--color-accent);
+  opacity: 1;
+  transform: translateY(20px) scale(1.1);
+}
+
+/* Botó d'amagar/mostrar menú */
+.menu-toggle-button {
+  position: absolute;
+  top: -15px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 25px;
+  border-radius: 12px 12px 0 0;
+  border: none;
+  font-size: 1.2em;
+  line-height: 25px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  z-index: 1000;
+  padding: 0; 
+  
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-button-primary);
+  color: var(--color-text-on-accent);
+  box-shadow: 0 -3px 8px var(--shadow-dark);
+}
+
+.menu-toggle-button:hover {
+  background-color: var(--color-button-primary-hover);
+}
+
+/* ========================================================================= */
+/* 4. SECCIONS DE SERVEI (CONTINGUT CENTRAL) */
+/* ========================================================================= */
+
+.service-section {
+  display: flex;
+  gap: 20px;
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-surface); 
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px var(--shadow-dark);
+  min-height: calc(100vh - 90px - 50px - 40px); /* Ajust aproximat de l'alçada */
+}
+
+.service-column {
+  flex: 1;
+  padding: 15px;
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-surface); 
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.vertical-split {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.top-sub-section {
+  padding-bottom: 15px;
+  /* 🎨 Colors basats en variables */
+  border-bottom: 1px solid var(--color-text-secondary); 
+}
+
+/* ESTILS DEL PDF VIEWER */
+.pdf-viewer-column {
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-background); 
+  border-left: 1px solid var(--color-text-secondary); 
+}
+.pdf-viewer-column-inverted {
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-background); 
+  border-right: 1px solid var(--color-text-secondary); 
+}
+
+/* Placeholder i contenidor del PDF */
+#pdf_viewer,
+.pdf-placeholder {
+  flex-grow: 1;
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-surface); 
+  border: 2px dashed var(--color-text-secondary); 
+  border-radius: 6px;
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.pdf-placeholder-text {
+  /* 🎨 Colors basats en variables */
+  color: var(--color-text-secondary);
+  font-style: italic;
+  padding: 20px;
+}
+
+/* ========================================================================= */
+/* 5. ELEMENTS DE FORMULARI */
+/* ========================================================================= */
+
+.form-group-inline {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px; 
+  align-items: flex-start;
+  width: 100%;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 15px; 
+  border-radius: 5px;
+  box-sizing: border-box; 
+  font-size: 1em;
+  
+  /* 🎨 Colors basats en variables */
+  border: 1px solid var(--color-input-border); 
+  background-color: var(--color-input-background); 
+  color: var(--color-input-text); 
+}
+.form-input:focus {
+    border-color: var(--color-accent);
+    outline: none;
+}
+
+/* Contenidor per inputs amb icones (e.g. Data) */
+.input-icon-container {
+  position: relative;
+  width: 100%;
+}
+
+/* 1. Amagar la icona nativa (WebKit) */
+.date-input-field::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 25px;
+  position: absolute;
+  right: 0;
+  cursor: pointer;
+}
+/* 2. Ajustar l'input (Firefox i espai per icona) */
+.date-input-field {
+  appearance: none;
+  -moz-appearance: none;
+  padding-right: 35px;
+  display: block;
+}
+
+/* 3. Estil de la Icona Personalitzada */
+.input-icon {
+  position: absolute;
+  right: 10px; 
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5em;
+  /* 🎨 Colors basats en variables */
+  color: var(--color-accent);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+/* 1. Amagar l'input natiu (deixar-lo funcional) */
+.hidden-file-input {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+/* 2. Estil de l'etiqueta (que actua com a botó) */
+.file-label {
+    /* Hereta l'estil de .primary-action-button */
+    white-space: nowrap; /* Evita que el text es trenqui */
+    flex-shrink: 0; /* Evita que es redueixi */
+    font-size: 0.9em;
+    padding: 8px 12px;
+}
+
+/* 3. Estil per mostrar el nom de l'arxiu */
+.file-name-display {
+    flex-grow: 1; /* Ocupa l'espai restant */
+    padding: 8px 0;
+    font-size: 0.9em;
+    /* 🎨 Colors basats en variables */
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-input {
+  width: 100%;
+  padding: 8px 0;
+  margin-bottom: 10px;
+  /* 🎨 Colors basats en variables */
+  color: var(--color-input-text);
+}
+
+/* BOTONS */
+.action-button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.primary-action-button {
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-button-primary);
+  color: var(--color-text-on-accent);
+}
+
+.primary-action-button:hover {
+  background-color: var(--color-button-primary-hover);
+}
+
+
+
+/* ========================================================================= */
+/* 6. PEU DE PÀGINA (FOOTER) */
+/* ========================================================================= */
+
+.bottom-app-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  z-index: 997; 
+  font-size: 0.8em;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  padding-left: 20px;
+
+  /* 🎨 Colors basats en variables */
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 -2px 5px var(--shadow-dark);
+}
+
+/* ========================================================================= */
+/* 7. MODE CLAR (LIGHT-MODE) - SOBRESCRIPCIONS */
+/* ========================================================================= */
+
+body.light-mode {
+  /* DEFINICIONS DE VARIABLES DEL TEMA CLAR */
+  --color-background: #f5f5f0; 
+  --color-surface: #e6d8c3; 
+  --color-text-primary: #5d866c; 
+  --color-text-secondary: #c2a68c; 
+  --color-accent: #5d866c; 
+  --shadow-dark: rgba(0, 0, 0, 0.15); 
+  
+  /* VARIABLES D'INPUTS I BOTONS (Sobrescripcions) */
+  --color-input-background: white;
+  --color-input-text: #333; /* Fosc */
+  --color-input-border: #ccc;
+  --color-button-primary-hover: #4e735d; /* Verd fosc per a hover */
+  --color-text-on-accent: white;
+
+  background-image: none;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+/* BARRA SUPERIOR */
+body.light-mode .top-app-bar {
+  background-color: var(--color-surface); 
+  box-shadow: 0 2px 5px var(--shadow-dark);
+}
+body.light-mode .app-logo {
+  color: var(--color-text-primary);
+}
+body.light-mode .logo-icon {
+  filter: drop-shadow(0 0 1px var(--shadow-dark));
+}
+
+
+/* SWITCH */
+body.light-mode .toggle-switch .slider {
+    background-color: var(--color-input-border); 
+}
+body.light-mode .toggle-switch .slider:before {
+    background-color: var(--color-background); /* Fons molt clar */
+}
+
+
+/* NAVEGACIÓ INFERIOR */
+body.light-mode .navigation {
+  background-color: var(--color-surface); 
+  box-shadow: 0 5px 20px var(--shadow-dark);
+}
+body.light-mode .navigation ul li a .icon,
+body.light-mode .navigation ul li a .text {
+  color: var(--color-text-primary);
+  filter: none;
+}
+body.light-mode .navigation ul li.active a .icon,
+body.light-mode .navigation ul li.active a .text {
+  color: var(--color-accent); 
+  filter: drop-shadow(0 0 0.5px var(--color-accent)); 
+}
+
+
+/* SECCIONS DE SERVEI (CONTINGUT CENTRAL) */
+body.light-mode .service-section {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+body.light-mode .top-sub-section {
+  border-bottom: 1px solid var(--color-input-border);
+}
+body.light-mode .pdf-viewer-column,
+body.light-mode .pdf-viewer-column-inverted {
+  background-color: var(--color-background); 
+  border-left: 1px solid var(--color-input-border); 
+  border-right: 1px solid var(--color-input-border); /* Fix per a inverted */
+}
+body.light-mode .pdf-placeholder {
+  background-color: var(--color-input-background); 
+  border: 2px dashed var(--color-input-border); 
+}
+body.light-mode .pdf-placeholder-text {
+  color: var(--color-text-secondary); 
+}
+
+/* ELEMENTS DE FORMULARI CLAR */
+body.light-mode .form-input {
+  background-color: var(--color-input-background);
+  color: var(--color-input-text);
+  border: 1px solid var(--color-input-border);
+}
+
+/* Icona d'input de data/cercador */
+body.light-mode .input-icon {
+  color: var(--color-accent);
+}
+
+/* PEU DE PÀGINA (FOOTER) */
+body.light-mode .bottom-app-bar {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 -2px 5px var(--shadow-dark);
+}
