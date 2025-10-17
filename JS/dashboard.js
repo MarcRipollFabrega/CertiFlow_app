@@ -31,10 +31,11 @@ async function getUserRole() {
     return null;
   }
 
-  // Consultem la taula 'usuaris' per obtenir el rol i el nom complet.
+  // Consultem la taula 'usuaris' per obtenir el rol i el nom.
+  // **CORRECCIÓ AQUÍ: Utilitzem el camp 'nom' en lloc de 'full_name'**
   const { data: userData, error } = await supabase
     .from("usuaris")
-    .select("role, full_name") // Utilitzem també el nom sencer si existeix
+    .select("role, nom") // <-- CANVIAT A 'nom'
     .eq("id", user.id) // Buscar per ID d'usuari (UUID)
     .single(); // Esperem només una fila
 
@@ -138,8 +139,9 @@ async function renderDashboard() {
   mainContent.innerHTML = `
         <div class="dashboard-wrapper">
             <header class="dashboard-header">
-                <h2>Benvingut/da, ${userData.full_name || "Usuari"}</h2>
-                <p>Rol: <span class="role-badge ${roleClass}">${userData.role.toUpperCase()}</span></p>
+                <h2>Benvingut/da, ${
+                  userData.nom || "Usuari"
+                }</h2> <p>Rol: <span class="role-badge ${roleClass}">${userData.role.toUpperCase()}</span></p>
             </header>
             
             <div class="dashboard-body">

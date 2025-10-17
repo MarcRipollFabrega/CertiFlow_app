@@ -38,6 +38,11 @@
 body {
     font-family: 'Roboto', sans-serif;
     background-color: var(--color-background);
+    background-image: url('../img/fons.jpg');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    background-attachment: fixed;
     color: var(--color-text-primary);
     display: flex;
     justify-content: center;
