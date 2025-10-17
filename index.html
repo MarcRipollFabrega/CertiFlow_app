@@ -7,13 +7,16 @@
     <link rel="stylesheet" href="CSS/reset.css" />
     <link rel="stylesheet" href="CSS/styles.css" />
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div class="login-container">
+    <!-- Contenidor principal per al login o el dashboard -->
+    <div class="login-container" id="app-container">
       <div class="login-left">
-        <!--?SVG aqui afegire el SVG del meu logo-->
+        <!--?SVG aqui afegire el SVG del meu logo -->
         <div class="svg-placeholder">
           <svg viewBox="0 0 100 100" class="animated-svg">
+            <!-- CERCLE: Classe per a l'animació CSS de rotació -->
             <circle
               cx="50"
               cy="50"
@@ -21,16 +24,8 @@
               fill="none"
               stroke="var(--color-accent)"
               stroke-width="3"
-            >
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from="0 50 50"
-                to="360 50 50"
-                dur="10s"
-                repeatCount="indefinite"
-              />
-            </circle>
+              class="animated-circle"
+            />
             <text
               x="50"
               y="55"
@@ -56,8 +51,9 @@
               id="email"
               required
               autocomplete="email"
-              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+              
               data-label="Correu Electrònic"
+              placeholder=" "
             />
             <label for="email" class="floating-label">Correu Electrònic</label>
           </div>
@@ -69,6 +65,7 @@
               required
               autocomplete="current-password"
               data-label="Contrasenya"
+              placeholder=" "
             />
             <label for="password" class="floating-label">Contrasenya</label>
           </div>
@@ -77,9 +74,12 @@
         </form>
       </div>
     </div>
-
+    
+    <!-- Contenidor per als missatges (Toast) -->
     <div id="toast-container" class="toast-container"></div>
 
+    <!-- Codi del SDK de Supabase (MOLT IMPORTANT: abans del teu script) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="JS/script.js"></script>
   </body>
 </html>

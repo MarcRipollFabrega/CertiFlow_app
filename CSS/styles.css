@@ -19,6 +19,13 @@
     /* Altres */
     --color-error: #e53e3e; /* Vermell per errors */
     --color-success: var(--color-accent); /* Verd per èxit */
+    
+    /* Colors Específics de Rols (per al Dashboard) */
+    --color-role-compres: #e76f51; /* Taronja per l'administrador inicial */
+    --color-role-juridic: #2a9d8f; /* Blau verdós */
+    --color-role-capdeseccio: #e9c46a; /* Groc suau */
+    --color-role-gerent: #f4a261; /* Taronja fosc */
+    --color-role-tecnic: #a8dadc; /* Blau clar per defecte */
 }
 
 /* Base i Tipografia */
@@ -223,6 +230,123 @@ input.valid + .floating-label {
     margin-right: 10px;
 }
 
+/* ==================================== */
+/* DASHBOARD STYLES (NEW) */
+/* ==================================== */
+
+.main-app-content {
+    width: 90%;
+    max-width: 1200px;
+    margin: 50px auto;
+    background-color: var(--color-surface);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px var(--shadow-dark);
+    padding: 30px;
+}
+
+.dashboard-header {
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--color-input-border);
+    margin-bottom: 30px;
+}
+
+.dashboard-header h2 {
+    font-size: 2em;
+    color: var(--color-accent);
+}
+
+.role-badge {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+/* Estils de Rols */
+.role-compres { background-color: var(--color-role-compres); color: black; }
+.role-juridic { background-color: var(--color-role-juridic); color: black; }
+.role-capdeseccio { background-color: var(--color-role-capdeseccio); color: black; }
+.role-gerent { background-color: var(--color-role-gerent); color: black; }
+.role-tecnic { background-color: var(--color-role-tecnic); color: black; }
+
+.section-title {
+    font-size: 1.5em;
+    color: var(--color-text-primary);
+    margin-bottom: 20px;
+    border-left: 4px solid var(--color-accent);
+    padding-left: 10px;
+}
+
+.dashboard-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.menu-item {
+    display: block;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: var(--color-input-background);
+    border: 1px solid var(--color-input-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: var(--color-text-primary);
+}
+
+.menu-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+.menu-item h3 {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    color: var(--color-accent);
+}
+
+.menu-item p {
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+}
+
+/* Colors destacats per a accions clau */
+.menu-highlight h3 { color: var(--color-role-compres); } /* Administració d'Usuaris */
+.menu-create h3 { color: var(--color-success); }
+.menu-approve h3 { color: var(--color-role-juridic); }
+
+.logout-button {
+    background-color: var(--color-error);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 40px;
+    transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+    background-color: #c53030; /* Vermell més fosc */
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    /* Força el color de fons del teu tema fosc */
+    -webkit-box-shadow: 0 0 0px 1000px var(--color-input-background) inset !important;
+    
+    /* Força el color del text del teu tema (blanc) */
+    -webkit-text-fill-color: var(--color-input-text) !important; 
+    
+    /* Assegura't que l'animació de transició no interfereixi amb el canvi sobtat */
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+
 /* Media Query per a dispositius més petits (responsive) */
 @media (max-width: 768px) {
     .login-container {
@@ -234,5 +358,12 @@ input.valid + .floating-label {
     }
     .login-right {
         padding: 30px;
+    }
+    .main-app-content {
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .dashboard-header h2 {
+        font-size: 1.5em;
     }
 }

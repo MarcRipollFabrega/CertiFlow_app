@@ -1,8 +1,32 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // === 1. CONFIGURACIÓ SUPABASE (SUBSTITUEIX AMB ELS TEUS VALORS REALS) ===
+  // *** IMPORTANT: Canvieu aquests valors NOMÉS AQUÍ ***
+  // Assegureu-vos que aquestes claus són les del vostre projecte Supabase
+  const SUPABASE_URL = "https://eptthzlpezbmfmnhshkj.supabase.co"; // ⬅️ SUBSTITUIR AQUÍ
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdHRoemxwZXpibWZtbmhzaGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NDE4ODIsImV4cCI6MjA3NjIxNzg4Mn0.l_Twgr8Y2sDpmztHVCGiGVrqnIfo8jz58TXTq3kmtD0"; // ⬅️ SUBSTITUIR AQUÍ
+
+  // Inicialitzar el client de Supabase.
+  // Ús de 'window.supabase.createClient' per evitar l'error 'ReferenceError'
+  // amb la variable local 'supabase'.
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  // *** SOLUCIÓ PER A LA DUPLICITAT: Exposar el client Supabase globalment ***
+  // Això permet a dashboard.js accedir-hi sense duplicar les claus.
+  window.supabaseClient = supabaseClient;
+
+  // === 2. ELEMENTS DEL DOM ===
   const loginForm = document.getElementById("loginForm");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const toastContainer = document.getElementById("toast-container");
+  const appContainer = document.getElementById("app-container");
+  const loginButton = document.getElementById("loginButton");
+
+  // === 3. FUNCIONS D'UTILITAT ===
 
   // Funció per mostrar un missatge Toast (notificació)
   function showToast(message, type = "success") {
@@ -35,103 +59,84 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 5000);
   }
 
-  // Funció que simula les comprovacions de validació del backend de Supabase
-  function validateCredentials(email, password) {
-    // 1. Comprovació de format de correu electrònic (bàsica, el HTML ja fa la validació de patró)
-    if (!email || !email.includes("@") || email.length < 5) {
-      return {
-        error: true,
-        message: "El format del correu electrònic no és vàlid.",
-      };
-    }
+  // === 4. CÀRREGA DEL DASHBOARD ===
 
-    // 2. Comprovació de seguretat de contrasenya (simulació de Supabase)
-    // La contrasenya ha de tenir almenys 8 caràcters.
-    if (!password || password.length < 8) {
-      return {
-        error: true,
-        message: "La contrasenya ha de tenir almenys 8 caràcters.",
-      };
-    }
+  // Funció per amagar el login i carregar dinàmicament l'script del dashboard
+  function loadAppDashboard() {
+    // 1. Amagar el formulari de login
+    appContainer.style.opacity = 0;
+    appContainer.innerHTML = ""; // Eliminar el contingut de login
 
-    // 3. Simulació d'usuari inexistent / credencials incorrectes
-    // Podem simular un error comú si l'email és "test@error.com"
-    if (email.toLowerCase() === "error@prova.cat") {
-      return {
-        error: true,
-        message:
-          "Credencials incorrectes. Usuari no trobat o contrasenya errònia.",
-      };
-    }
+    // 2. Crear el contenidor principal de l'aplicació
+    const mainContent = document.createElement("div");
+    mainContent.id = "main-app-content";
+    appContainer.appendChild(mainContent);
 
-    // 4. Tot correcte
-    return {
-      error: false,
-      message: "Inici de sessió correcte! Redireccionant...",
-    };
+    // 3. Afegir el nou script (dashboard.js)
+    const script = document.createElement("script");
+
+    // 🔥 CORRECCIÓ DE LA RUTA: Afegim 'JS/' perquè el fitxer hi és
+    script.src = "JS/dashboard.js";
+    script.type = "module"; // Utilitzar mòdul per resoldre l'accés global a 'supabaseClient'
+    document.body.appendChild(script);
+
+    // 4. Mostrar el contenidor del dashboard amb transició
+    setTimeout(() => {
+      appContainer.style.opacity = 1;
+    }, 50); // Petit retard per a la transició
   }
 
-  // Funció per gestionar l'estat 'valid' per al floating label
-  function updateValidationClass(inputElement) {
-    if (inputElement.value.trim() !== "") {
-      // Mantenir l'etiqueta a dalt si té valor
-      inputElement.classList.add("valid");
-    } else {
-      // Treure la classe si està buit
-      inputElement.classList.remove("valid");
-    }
-  }
+  // === 5. GESTIÓ DEL LOGIN ===
 
-  // Afegir event listeners per a la lògica de 'Floating Label' (mantindre's a dalt)
-  [emailInput, passwordInput].forEach((input) => {
-    // En carregar la pàgina (per si el navegador autocompleta)
-    updateValidationClass(input);
-
-    // Quan l'usuari escriu o canvia el valor
-    input.addEventListener("input", () => updateValidationClass(input));
-    input.addEventListener("blur", () => updateValidationClass(input)); // També al sortir del focus
-  });
-
-  // Gestió de l'enviament del formulari
-  loginForm.addEventListener("submit", (e) => {
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
 
-    // Netejar missatges anteriors (opcional, el toast ja desapareix)
-    // ...
-
-    // Realitzar les comprovacions de validació
-    const result = validateCredentials(email, password);
-
-    if (result.error) {
-      showToast(result.message, "error");
-      // Si hi ha error, no fem res més
-    } else {
-      // Tot correcte
-      showToast(result.message, "success");
-
-      // Simular la càrrega d'un nou JavaScript (com has demanat)
-      setTimeout(() => {
-        // Aquí normalment faries window.location.href = '/dashboard.html';
-        // Com que has demanat que carregui un javascript nou, ho simulem:
-        console.log("Simulant càrrega de nou JavaScript 'dashboard.js'");
-
-        const script = document.createElement("script");
-        script.src = "dashboard.js";
-        document.body.appendChild(script);
-
-        // Opcional: Deshabilitar el formulari o redireccionar
-        loginForm.style.pointerEvents = "none";
-      }, 2000); // Esperar 2 segons perquè l'usuari vegi el missatge d'èxit
+    // Validació bàsica de camps buits
+    if (!email || !password) {
+      showToast("Tots els camps són obligatoris.", "error");
+      return;
     }
+
+    // Deshabilitar el botó mentre processa
+    loginButton.disabled = true;
+    loginButton.textContent = "Verificant...";
+
+    // 1. Crida a la funció d'autenticació de Supabase
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      console.error("Error Supabase Auth:", error);
+      showToast(
+        "Error: Credencials incorrectes o l'usuari no existeix.",
+        "error"
+      );
+    } else if (data.user) {
+      // 2. Inici de sessió exitós
+      showToast("Inici de sessió correcte! Carregant aplicació...", "success");
+
+      setTimeout(() => {
+        loadAppDashboard();
+      }, 1000);
+    } else {
+      showToast("Error desconegut durant l'autenticació.", "error");
+    }
+
+    loginButton.disabled = false;
+    loginButton.textContent = "Accedir";
   });
 
-  // Simular el contingut de 'dashboard.js' (crea aquest fitxer al projecte si vols)
-  /* window.onload = function() {
-        console.log("El nou script 'dashboard.js' s'ha carregat i executat.");
-        // alert("Dashboard carregat!"); 
-    };
-    */
+  // === 6. VERIFICAR LA SESSIÓ AL CARREGAR LA PÀGINA ===
+  // Això permet a l'usuari mantenir la sessió si refresca la pàgina.
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      // Si la sessió ja existeix, carreguem el dashboard directament
+      loadAppDashboard();
+    }
+  });
 });
