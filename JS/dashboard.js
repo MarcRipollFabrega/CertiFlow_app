@@ -67,14 +67,20 @@ async function handleLogout() {
  * 3. MOSTRAR EL CONTINGUT DEL DASHBOARD (Vista Inicial) I PEU DE PÀGINA
  */
 async function renderDashboard() {
+  // 🛠️ CORRECCIÓ: Moure la cerca dels elements dins de la funció
   const mainContent = document.getElementById("main-app-content");
   const logoutFooterContainer = document.getElementById(
     "logout-footer-container"
   );
   const userInfoFooter = document.getElementById("user-info-footer");
 
-  if (!supabase || !mainContent || !logoutFooterContainer || !userInfoFooter)
+  // Només continuar si tots els elements i el client Supabase existeixen
+  if (!supabase || !mainContent || !logoutFooterContainer || !userInfoFooter) {
+    console.warn(
+      "Render Error: Falten contenidors del Dashboard o client Supabase."
+    );
     return;
+  }
 
   const userData = await getUserRole();
 
@@ -87,7 +93,6 @@ async function renderDashboard() {
   const userName = nom || "Usuari Desconegut";
 
   // 1. GENERAR EL CONTINGUT DEL DASHBOARD (MODIFICAT)
-  // S'elimina el 'dashboard-header' de benvinguda.
   mainContent.innerHTML = `
         <div class="dashboard-wrapper">
             
@@ -98,7 +103,7 @@ async function renderDashboard() {
         </div>
     `;
 
-  // 2. INJECTAR NOM D'USUARI I ROL AL PEU DE PÀGINA (Es manté la lògica prèvia)
+  // 2. INJECTAR NOM D'USUARI I ROL AL PEU DE PÀGINA
   userInfoFooter.innerHTML = `
         <p class="footer-user-info">
             Usuari: <strong>${userName}</strong> 
