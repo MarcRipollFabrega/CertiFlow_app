@@ -98,10 +98,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="loading-spinner"></div>
             </main>
             
-            <footer class="bottom-app-bar" id="app-footer">
-                <div class="footer-info" id="user-info-footer"></div>
-                <div class="footer-logout" id="logout-footer-container"></div>
-            </footer>
+           <footer class="bottom-app-bar" id="app-footer">
+        <div class="footer-info" id="user-info-footer"></div>
+        
+        <div class="footer-menu-container">
+            <ul id="navbar-menu" class="navbar-menu">
+                <li data-id="enviar" class="list active"> <a href="#enviar">
+                        <span class="icon">📤</span>
+                        <span class="text">Enviar</span>
+                    </a>
+                </li>
+                <li data-id="consultar" class="list">
+                    <a href="#consultar">
+                        <span class="icon">🔍</span>
+                        <span class="text">Consultar</span>
+                    </a>
+                </li>
+                <li data-id="admin" class="list">
+                    <a href="#admin">
+                        <span class="icon">⚙️</span>
+                        <span class="text">Admin</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="footer-logout" id="logout-footer-container"></div>
+    </footer>
             
             ${currentToastContainer} 
         `;
@@ -134,6 +157,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // 4. Càrrega del codi del dashboard
       const script = document.createElement("script");
       script.src = "../JS/dashboard.js";
+      script.onload = () => {
+        // ⚠️ Comprovem que la funció existeixi abans de cridar-la
+        if (window.renderDashboard) {
+          window.renderDashboard();
+        }
+      };
       document.body.appendChild(script);
     }
   }
