@@ -11,12 +11,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // URL de la nova funció Edge que gestiona el login
   const LOGIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-login`;
+//Alta usuari
+  const ALTA_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-alta`;
 
   // 🛠️ INICIALITZACIÓ CORREGIDA: L'SDK requereix ambdós valors (URL i ANON KEY)
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
   );
+
+  window.ALTA_USUARIS_FUNCTION_URL = ALTA_USUARIS_FUNCTION_URL;
+
   window.supabaseClient = supabaseClient;
 
   // === 2. REFERÈNCIES I 3. FUNCIONS AUXILIARS ===
