@@ -1,0 +1,85 @@
+/* ========================================================================= */
+/* 7. FORMULARIS I BOTONS (Estils base per a 'enviar.js') */
+/* ========================================================================= */
+
+.service-column {
+    flex: 1; /* Ocupa la mateixa amplada */
+    min-width: 300px;
+}
+
+.form-group-inline {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.form-group-inline label {
+    flex-basis: 120px;
+    font-weight: 700;
+    font-size: 1.4rem;
+}
+
+.form-input, .form-select, .file-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid var(--color-input-border);
+    border-radius: 4px;
+    background-color: var(--color-input-background);
+    color: var(--color-input-text);
+    font-size: 1.6rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none; /* Per estils més uniformes */
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.form-input:focus, .form-select:focus, .file-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(3, 151, 52, 0.2);
+    outline: none;
+}
+
+/* Botons d'acció */
+.action-button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.6rem;
+    transition: background-color 0.2s;
+}
+
+.primary-action-button {
+    background-color: var(--color-button-primary);
+    color: var(--color-text-on-accent);
+}
+
+.primary-action-button:hover {
+    background-color: var(--color-button-primary-hover);
+}
+
+/* Visulitzador PDF */
+.pdf-viewer-column {
+    position: sticky;
+    top: 20px;
+    height: 80vh; /* Altura fixa per al visualitzador */
+}
+
+.pdf-placeholder {
+    width: 100%;
+    height: calc(100% - 40px); /* Ajusta a l'espai disponible */
+    background-color: #585858;
+    border: 2px dashed var(--color-input-border);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.pdf-placeholder-text {
+    color: #bdbdbd;
+    font-size: 1.8rem;
+    font-weight: 500;
+}

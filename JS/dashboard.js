@@ -63,6 +63,27 @@ function getRoleSpecificContent(role) {
 }
 
 // =======================================================
+// 🌟🌟 NOU: FUNCIÓ AUXILIAR PER CARREGAR CSS DINÀMICAMENT 🌟🌟
+// =======================================================
+
+/**
+ * Carrega un fitxer CSS dinàmicament si encara no està carregat.
+ * @param {string} href - El path del fitxer CSS (ex: '../CSS/admin.css').
+ * @param {string} id - L'ID del link a comprovar/crear (ex: 'admin-styles').
+ */
+function loadCSS(href, id) {
+  if (document.getElementById(id)) {
+    return; // Ja carregat, sortir
+  }
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.type = "text/css";
+  link.href = href;
+  document.head.appendChild(link);
+}
+
+// =======================================================
 // 🌟🌟 FUNCIÓ CORREGIDA PER LA CÀRREGA DE COMPONENTS 🌟🌟
 // =======================================================
 
@@ -73,11 +94,6 @@ function getRoleSpecificContent(role) {
 async function loadComponent(componentName) {
   const mainContent = document.getElementById("main-app-content");
   if (!mainContent) return;
-
-  // 🌟🌟 CLAU: Assegurar-se que el contenidor principal s'estiri verticalment
-  // Si la vostra aplicació utilitza flexbox o grid a un nivell superior,
-  // aquesta línia és essencial perquè 'main-app-content' consumeixi l'espai lliure.
-  //mainContent.style.flexGrow = "1";
 
   // Netegem el contingut principal
   mainContent.innerHTML = "";
@@ -115,11 +131,52 @@ async function loadComponent(componentName) {
       break;
 
     case "admin":
-      mainContent.innerHTML = `
-                <div class="dashboard-wrapper">
-                    <h2 class="section-title">Opcio ADMIN</h2>
-                    <p>Has fet clic a ⚙️ **ADMIN**. Aquesta és la vista d'administració d'usuaris.</p>
-                </div>`;
+      // 🌟🌟 MODIFICACIÓ CLAU PER AL LAYOUT DE 4 PARTS 🌟🌟
+      try {
+        // 1. Carregar el full d'estils d'administració
+        loadCSS("../CSS/admin.css", "admin-styles");
+
+        // 2. Injectar l'esquelet del layout d'administració (4 columnes/quadrants)
+        mainContent.innerHTML = `
+                <div class="admin-wrapper">
+                    <h2 class="section-title">Administració del Sistema</h2>
+
+                    <div class="admin-grid-layout">
+                        
+                        <div class="admin-quadrant admin-quadrant-1" id="altaUsuarisContainer">
+                            </div>
+                        
+                        <div class="admin-quadrant admin-quadrant-2">
+                            <h3 class="crud-title">Taula de Llistat d'Usuaris</h3>
+                            <p>Aquí anirà el llistat d'usuaris amb opcions d'edició i eliminació.</p>
+                        </div>
+                        
+                        <div class="admin-quadrant admin-quadrant-3">
+                            <h3 class="crud-title">Gestió de Rols</h3>
+                            <p>Eines per crear, modificar i assignar rols.</p>
+                        </div>
+                        
+                        <div class="admin-quadrant admin-quadrant-4">
+                            <h3 class="crud-title">Monitorització</h3>
+                            <p>Logs i estadístiques d'ús del sistema (Edge Functions, etc.).</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        // 3. Carregar el mòdul del CRUD i injectar-lo al quadrant 1
+        // (Això requereix que el fitxer 'alta-usuaris-crud.js' existeixi)
+        const AltaUsuarisModule = await import("../JS/alta-usuaris-crud.js");
+        const crudElement = AltaUsuarisModule.createAltaUsuarisCRUD();
+
+        const altaContainer = document.getElementById("altaUsuarisContainer");
+        if (altaContainer) {
+          altaContainer.appendChild(crudElement);
+        }
+      } catch (error) {
+        console.error("Error al carregar el component Admin o CRUD:", error);
+        mainContent.innerHTML = `<div class="error-message">❌ Error al carregar la vista d'Administració. Verifica la ruta o el contingut de 'alta-usuaris-crud.js'.</div>`;
+      }
       break;
 
     default:
@@ -165,7 +222,7 @@ async function renderDashboard() {
   const userInfoFooter = document.getElementById("user-info-footer");
   const navbarMenu = document.getElementById("navbar-menu"); // Element ul
 
-  // ... (Validacions d'elements HTML)
+  // ... (Validacions d'elements HTML - ometrem-les aquí per brevetat)
 
   const userData = await getUserRole();
 
