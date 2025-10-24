@@ -7,8 +7,8 @@
 /* Contenidor Grid dels 4 Quadrants */
 .admin-grid-layout {
     display: grid;
-    grid-template-columns: 0.7fr 1.3fr;
-    grid-template-rows: 1.5fr 1.5fr;
+    grid-template-columns: 0.8fr 1.2fr;
+    grid-template-rows: 1fr;
     gap: 20px; /* Espai entre quadrants */
     height: calc(100% - 40px - 55px); 
     min-height: 500px; 
@@ -56,6 +56,50 @@
     margin-top: 5px;
     flex-grow: 1; 
     overflow: hidden; 
+}
+
+.input-group {
+    position: relative;
+    width: 95%; /* Més estret per centrar-se millor */
+    margin: 0 auto;
+}
+
+/* Estils per INPUT i NOU: SELECT */
+/* Apliquem estils base per INPUT i SELECT */
+.crud-form input[type="text"],
+.crud-form input[type="email"],
+.crud-form input[type="password"],
+.crud-form select /* ⬅️ NOU: Incloem l'element SELECT */
+{
+    width: 100%;
+    padding: 14px 10px 6px 10px; /* Ajustat per la floating label */
+    background-color: var(--color-input-background);
+    border: 1px solid var(--color-input-border);
+    border-radius: 4px;
+    font-size: 1rem;
+    color: var(--color-text-primary);
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none; /* ⬅️ Molt important per a SELECT */
+    -moz-appearance: none; /* ⬅️ Molt important per a SELECT */
+    appearance: none; /* ⬅️ Molt important per a SELECT */
+}
+
+/* Estil per al SELECT per afegir fletxa personalitzada */
+.crud-form select {
+    /* Afegim una fletxa de descàrrega CSS/SVG si volem una aparença consistent */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 30px; /* Deixem espai per la fletxa */
+}
+
+/* Estils per OPTIONS (Més difícil d'estilitzar globalment, però s'hereten colors) */
+.crud-form select option {
+    background: var(--color-input-background);
+    color: var(--color-text-primary);
+    padding: 5px 10px;
 }
 
 /* ========================================================================= */
@@ -108,7 +152,10 @@
 
 /* Lògica del Floating Label (QUAN HA DE PUJAR) */
 .crud-form input:focus + .floating-label,
-.crud-form input:not(:placeholder-shown) + .floating-label {
+.crud-form input:not(:placeholder-shown) + .floating-label,
+.crud-form select:focus + .floating-label, /* ✅ NOU: Quan el SELECT té focus */
+.crud-form select:valid + .floating-label /* ✅ NOU: Quan el SELECT té un valor seleccionat (és 'valid') */
+{
     top: 0;
     font-size: 0.8rem; /* Més petit que al login per compactar */
     color: var(--color-accent);

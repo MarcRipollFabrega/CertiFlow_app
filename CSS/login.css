@@ -135,6 +135,10 @@
     transform: translateY(-50%);
 }
 
+.login-form .input-group {
+    margin-bottom: 10px; 
+}
+
 /* Fix per Autofill */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 

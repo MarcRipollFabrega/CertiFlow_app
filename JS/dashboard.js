@@ -1,3 +1,5 @@
+// Fitxer: ../JS/dashboard.js
+
 // Aquest script s'executa un cop l'usuari ha iniciat sessió correctament.
 
 const supabase = window.supabaseClient;
@@ -50,6 +52,138 @@ async function getUserRole() {
   return userData;
 }
 
+// *************************************************************************
+// FUNCIONS DE CÀRREGA DE DADES PER ALS SELECTS (IMPLEMENTADES AQUÍ)
+// *************************************************************************
+
+/**
+ * Carrega els rols de la taula 'user_roles'.
+ * @param {HTMLSelectElement} selectElement - El <select> que s'ha d'omplir.
+ */
+async function loadRolesFunction(selectElement) {
+  selectElement.innerHTML = "";
+
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Selecciona un Rol";
+  placeholderOption.disabled = true;
+  placeholderOption.selected = true;
+  selectElement.appendChild(placeholderOption);
+
+  try {
+    const { data: rols, error } = await supabase
+      .from("user_roles")
+      .select("role_name")
+      .order("role_name", { ascending: true });
+
+    if (error) throw error;
+
+    rols.forEach((rol) => {
+      const option = document.createElement("option");
+      option.value = rol.role_name;
+      option.textContent = rol.role_name;
+      selectElement.appendChild(option);
+    });
+  } catch (error) {
+    console.error("❌ Error carregant rols des de la BD:", error);
+    placeholderOption.textContent = "❌ Error al carregar rols";
+  }
+}
+/**
+ * Carrega els departaments de la taula 'departaments'.
+ * @param {HTMLSelectElement} selectElement - El <select> que s'ha d'omplir (adminDepartament).
+ */
+async function loadDepartamentsFunction(selectElement) {
+  selectElement.innerHTML = "";
+
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Selecciona un Departament";
+  placeholderOption.disabled = true;
+  placeholderOption.selected = true;
+  selectElement.appendChild(placeholderOption);
+
+  try {
+    const { data: departaments, error } = await supabase
+      .from("departaments")
+      .select("nom_departament")
+      .order("nom_departament", { ascending: true });
+
+    if (error) throw error;
+
+    departaments.forEach((dpt) => {
+      const option = document.createElement("option");
+      option.value = dpt.nom_departament;
+      option.textContent = dpt.nom_departament;
+      selectElement.appendChild(option);
+    });
+  } catch (error) {
+    console.error("❌ Error carregant departaments des de la BD:", error);
+    placeholderOption.textContent = "❌ Error al carregar departaments";
+  }
+}
+
+// *************************************************************************
+// CÀRREGA DE COMPONENTS (Modificació Clau)
+// *************************************************************************
+
+/**
+ * Funció per carregar el contingut dinàmic (enviar, historial, admin)
+ */
+async function loadComponent(componentId) {
+  const componentContainer = document.getElementById("component-content");
+  componentContainer.innerHTML = ""; // Netejar l'antic contingut
+
+  // Per a l'admin necessitem assegurar-nos que l'HTML ja estigui carregat per a la injecció
+  if (componentId === "admin") {
+    componentContainer.innerHTML = `
+            <div class="admin-wrapper">
+                <h2 class="section-title">Panell d'Administració</h2>
+                <div class="admin-grid-layout">
+                    <div class="admin-quadrant admin-quadrant-1">
+                        </div>
+                    <div class="admin-quadrant admin-quadrant-2">Gestió de Rols / Departaments</div>
+                    <div class="admin-quadrant admin-quadrant-3">Activitats Recents</div>
+                    <div class="admin-quadrant admin-quadrant-4">Estadístiques</div>
+                </div>
+            </div>
+        `;
+  }
+
+  switch (componentId) {
+    case "enviar":
+      // Lògica per carregar el component "enviar"
+      componentContainer.innerHTML = `<h1>Enviar Document</h1>`;
+      break;
+
+    case "historial":
+      // Lògica per carregar el component "historial"
+      componentContainer.innerHTML = `<h1>Historial de Documents</h1>`;
+      break;
+
+    case "admin":
+      // Importar la funció creadora del CRUD
+      const { createAltaUsuarisCRUD } = await import("./altaUsuari.js");
+
+      // ✅ CRIDA CORRECTA: Passem les dues funcions de càrrega
+      const altaUsuarisElement = createAltaUsuarisCRUD(
+        loadRolesFunction,
+        loadDepartamentsFunction
+      );
+
+      // Afegir l'element al quadrant corresponent
+      const adminQuadrant1 = document.querySelector(".admin-quadrant-1");
+      if (adminQuadrant1) {
+        adminQuadrant1.appendChild(altaUsuarisElement);
+      }
+      break;
+
+    default:
+      componentContainer.innerHTML = `<h1>Selecciona una opció.</h1>`;
+      break;
+  }
+}
+
 // ⚠️ Mantenim aquesta funció de moment, però no es fa servir per a la navegació principal
 function getRoleSpecificContent(role) {
   return `
@@ -63,7 +197,7 @@ function getRoleSpecificContent(role) {
 }
 
 // =======================================================
-// 🌟🌟 NOU: FUNCIÓ AUXILIAR PER CARREGAR CSS DINÀMICAMENT 🌟🌟
+// 🌟🌟 FUNCIÓ AUXILIAR PER CARREGAR CSS DINÀMICAMENT 🌟🌟
 // =======================================================
 
 /**
@@ -81,6 +215,50 @@ function loadCSS(href, id) {
   link.type = "text/css";
   link.href = href;
   document.head.appendChild(link);
+}
+
+// =======================================================
+// 🌟🌟 NOVA FUNCIÓ: CARREGAR ROLS DE LA BASE DE DADES 🌟🌟
+// =======================================================
+
+/**
+ * Llegeix els rols vàlids de la taula user_roles i omple el <select> donat.
+ * @param {HTMLElement} selectElement - L'element <select> a omplir.
+ */
+async function loadRoles(selectElement) {
+  if (!selectElement) return;
+
+  // 1. CONSULTA CORREGIDA (Ja utilitza role_name segons la teva BD)
+  const { data, error } = await supabase.from("user_roles").select("role_name"); // ⬅️ Correcte: Selecciona la columna 'role_name'
+
+  selectElement.innerHTML = ""; // Netejar el missatge de 'Carregant'
+
+  if (error) {
+    console.error("Error carregant rols de la BD:", error);
+    selectElement.innerHTML =
+      '<option value="" disabled selected>Error: Cal recarregar</option>';
+    return;
+  }
+
+  // Afegir l'opció per defecte (Selecciona el rol)
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Selecciona el rol";
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  selectElement.appendChild(defaultOption);
+
+  // 2. CORRECCIÓ CLAU: LLEGIR LA PROPIETAT role_name
+  data.forEach((roleData) => {
+    const option = document.createElement("option");
+    // 🚨 CORRECCIÓ AQUÍ: Llegeix 'role_name' en lloc de 'role'
+    const roleValue = roleData.role_name;
+
+    option.value = roleValue;
+    // Capitalitzar la primera lletra per millorar la visualització
+    option.textContent = roleValue.charAt(0).toUpperCase() + roleValue.slice(1);
+    selectElement.appendChild(option);
+  });
 }
 
 // =======================================================
@@ -131,51 +309,51 @@ async function loadComponent(componentName) {
       break;
 
     case "admin":
-      // 🌟🌟 MODIFICACIÓ CLAU PER AL LAYOUT DE 4 PARTS 🌟🌟
       try {
-        // 1. Carregar el full d'estils d'administració
+        // 1. Carregar la vista d'administració (inclòs el layout)
+        // Utilitzem loadCSS per assegurar-nos que els estils es carreguen.
+        // NOTA: Cal que tinguis definida la funció loadCSS al teu dashboard.js
         loadCSS("../CSS/admin.css", "admin-styles");
 
-        // 2. Injectar l'esquelet del layout d'administració (4 columnes/quadrants)
+        // Injectar l'esquelet (sense el contingut del quadrant 1, que es carregarà després)
         mainContent.innerHTML = `
                 <div class="admin-wrapper">
                     <h2 class="section-title">Administració del Sistema</h2>
-
                     <div class="admin-grid-layout">
                         
                         <div class="admin-quadrant admin-quadrant-1" id="altaUsuarisContainer">
                             </div>
                         
                         <div class="admin-quadrant admin-quadrant-2">
-                            <h3 class="crud-title">Taula de Llistat d'Usuaris</h3>
-                            <p>Aquí anirà el llistat d'usuaris amb opcions d'edició i eliminació.</p>
+                            <h3 class="crud-title">Gestió de Rols / Departaments</h3>
+                            <p>Aquí anirà el CRUD de Rols i Departaments.</p>
                         </div>
-                        
-                        <div class="admin-quadrant admin-quadrant-3">
-                            <h3 class="crud-title">Gestió de Rols</h3>
-                            <p>Eines per crear, modificar i assignar rols.</p>
-                        </div>
-                        
-                        <div class="admin-quadrant admin-quadrant-4">
-                            <h3 class="crud-title">Monitorització</h3>
-                            <p>Logs i estadístiques d'ús del sistema (Edge Functions, etc.).</p>
-                        </div>
+                   
+                        <div class="admin-quadrant admin-quadrant-3">Activitats Recents</div>
+                        <div class="admin-quadrant admin-quadrant-4">Estadístiques</div>
                     </div>
                 </div>
             `;
 
         // 3. Carregar el mòdul del CRUD i injectar-lo al quadrant 1
-        // (Això requereix que el fitxer 'alta-usuaris-crud.js' existeixi)
-        const AltaUsuarisModule = await import("../JS/alta-usuaris-crud.js");
-        const crudElement = AltaUsuarisModule.createAltaUsuarisCRUD();
+
+        // 🛑 CORRECCIÓ 1: Ús de la desestructuració per evitar el 'TypeError: ... is not a function'
+        // Mantenim la ruta actual, si torna a fallar, prova amb import("../JS/altaUsuari.js")
+        const { createAltaUsuarisCRUD } = await import("./altaUsuari.js");
+
+        // 🛑 CORRECCIÓ 2: Passem les dues funcions DEFINIDES CORRECTAMENT a dashboard.js
+        const crudElement = createAltaUsuarisCRUD(
+          loadRolesFunction, // ✅ Funció de càrrega de rols (el nom correcte)
+          loadDepartamentsFunction // ✅ Funció de càrrega de departaments (el nou select)
+        );
 
         const altaContainer = document.getElementById("altaUsuarisContainer");
         if (altaContainer) {
           altaContainer.appendChild(crudElement);
         }
       } catch (error) {
-        console.error("Error al carregar el component Admin o CRUD:", error);
-        mainContent.innerHTML = `<div class="error-message">❌ Error al carregar la vista d'Administració. Verifica la ruta o el contingut de 'alta-usuaris-crud.js'.</div>`;
+        console.error("❌ ERROR AL CARREGAR EL COMPONENT ADMIN:", error);
+        mainContent.innerHTML = `<div class="error-message">❌ **ERROR FATAL** al carregar la vista d'Administració. Verifica la **ruta d'importació** d'altaUsuari.js i el teu **Console (F12)**.</div>`;
       }
       break;
 
@@ -276,6 +454,46 @@ async function renderDashboard() {
       }
     }
   });
+}
+
+// Funcions de suport (Necessiten definició real o ser importades al teu projecte)
+// *************************************************************************
+
+// AQUESTES FUNCIONS HAN D'EXISTIR. Si no les tens al teu dashboard.js, usa aquest exemple:
+
+function createDashboardLayout(userName, role, roleClass, navItems) {
+  // Retorna l'HTML de l'esquelet del dashboard
+  return `
+        <div class="dashboard-wrapper">
+            <nav class="navbar">
+                <ul id="navbar-menu">
+                   ${navItems
+                     .map(
+                       (item) =>
+                         `<li class="list" data-id="${item.id}">${item.text}</li>`
+                     )
+                     .join("")}
+                </ul>
+            </nav>
+            <main id="component-content" class="content-area">
+                </main>
+            <footer class="footer">
+                <div id="user-info-footer"></div>
+                <div id="logout-footer-container"></div>
+            </footer>
+        </div>
+    `;
+}
+
+function getDashboardMenuItems(role) {
+  // Retorna els elements de navegació segons el rol
+  return [
+    { id: "enviar", text: "Enviar", icon: "send" },
+    { id: "historial", text: "Historial", icon: "history" },
+    ...(role === "Gerent"
+      ? [{ id: "admin", text: "Admin", icon: "settings" }]
+      : []),
+  ];
 }
 
 // Exposem la funció al global per ser cridada des de main.js

@@ -1,3 +1,5 @@
+import { createPasswordSetupForm } from "./password-reset.js";
+
 document.addEventListener("DOMContentLoaded", () => {
   // === 1. CONFIGURACIÓ SUPABASE (VALORS NECESSARIS PER A L'SDK) ===
 
@@ -11,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // URL de la nova funció Edge que gestiona el login
   const LOGIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-login`;
-//Alta usuari
+  //Alta usuari
   const ALTA_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-alta`;
 
   // 🛠️ INICIALITZACIÓ CORREGIDA: L'SDK requereix ambdós valors (URL i ANON KEY)
@@ -174,15 +176,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === 5. LÒGICA D'AUTENTICACIÓ ===
 
-  async function checkSession() {
-    const {
-      data: { session },
-    } = await supabaseClient.auth.getSession();
+ async function checkSession() {
+   const {
+     data: { session },
+   } = await supabaseClient.auth.getSession();
+   const appContainer = document.getElementById("app-container");
 
-    if (session) {
-      loadAppDashboard();
-    }
-  }
+   // Neteja l'error anterior, si n'hi ha
+   // hideLoginForm();
+
+   if (session) {
+     const user = session.user;
+     const userMetadata = user.user_metadata || {};
+
+     // 🚨 1. PAS CLAU: DETECTAR LA BANDERA 'initial_setup'
+     // El teu Edge Function l'estableix a false per a usuaris nous invitats.
+     const initialSetupPending = userMetadata.initial_setup === false;
+
+     if (initialSetupPending) {
+       // 2. L'USUARI S'HA LOGUEJAT PER L'ENLLAÇ, PERÒ NECESSITA CONTRASENYA
+       console.log(
+         "Usuari pendent d'establir contrasenya. Carregant formulari."
+       );
+
+       // Reemplaça el contingut actual amb el formulari de contrasenya
+       appContainer.innerHTML = "";
+
+       // 3. Importem la funció d'altres fitxers (ja la tens al main.js)
+       // Assegura't que createPasswordSetupForm estigui accessible aquí.
+       const passwordSetupForm = createPasswordSetupForm(
+         supabaseClient,
+         loadAppDashboard // Callback per carregar el dashboard després de l'èxit
+       );
+
+       appContainer.appendChild(passwordSetupForm);
+     } else {
+       // 4. SESSIÓ ESTABLIDA I CONTRASENYA CONFIGURADA. CARREGA EL DASHBOARD
+       console.log("Sessió activa. Carregant Dashboard.");
+       loadAppDashboard();
+     }
+   } else {
+     // 5. NO HI HA SESSIÓ. MOSTRA EL FORMULARI DE LOGIN
+     console.log("No hi ha sessió. Mostrant Login.");
+     showLoginForm(); // (O la funció que mostri el teu formulari d'inici de sessió)
+   }
+ }
 
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
