@@ -50,6 +50,9 @@ a {
     --color-button-primary: var(--color-accent);
     --color-button-primary-hover: #027a29;
     --color-text-on-accent: white; 
+    --color-edit: #ffeb3b;
+    --color-edit-hover: #fbc02d;
+    
 
     /* ESTATS */
     --color-error: #e53e3e; 

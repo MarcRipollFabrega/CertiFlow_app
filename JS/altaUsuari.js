@@ -55,7 +55,7 @@ export function createAltaUsuarisCRUD(
   const form = crudContainer.querySelector("#altaUsuariForm");
   const roleSelect = crudContainer.querySelector("#adminRole");
   const departamentSelect = crudContainer.querySelector("#adminDepartament"); // ✅ Referència al nou SELECT
-  const altaButton = crudContainer.querySelector("#adminAltaButton");
+  const altaButton = crudContainer.querySelector("#altaUsuariButton");
   const missatgeEstat = crudContainer.querySelector("#adminMissatgeEstat");
 
   // Wrapper per carregar els rols i forçar la selecció de 'Tècnic' per defecte

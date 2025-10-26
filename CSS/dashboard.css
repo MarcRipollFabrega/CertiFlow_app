@@ -345,3 +345,9 @@ input:checked + .slider:before {
 .toast-error {
     border-left: 5px solid var(--color-error);
 }
+/* ========================================================================= */
+/* 10. CLASSES D'OCULTACIÓ */
+/* ========================================================================= */
+.visually-hidden {
+    display: none !important; 
+}

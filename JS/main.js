@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="text">Consultar</span>
                     </a>
                 </li>
-                <li data-id="admin" class="list">
+                <li data-id="admin" class="list visually-hidden">
                     <a href="#admin">
                         <span class="icon">⚙️</span>
                         <span class="text">Admin</span>
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 4. Càrrega del codi del dashboard
       const script = document.createElement("script");
-      script.src = "../JS/dashboard.js";
+      script.src = "/JS/dashboard.js";
       script.onload = () => {
         // ⚠️ Comprovem que la funció existeixi abans de cridar-la
         if (window.renderDashboard) {
