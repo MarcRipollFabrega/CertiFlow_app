@@ -3,6 +3,7 @@
 // Aquest script s'executa un cop l'usuari ha iniciat sessió correctament.
 
 const supabase = window.supabaseClient;
+const DELETE_USUARIS_FUNCTION_URL = window.DELETE_USUARIS_FUNCTION_URL;
 
 /**
  * Funció per tancar la sessió
@@ -180,6 +181,87 @@ async function saveUserChangesFunction(email, updatedFields) {
     return false;
   }
 }
+/**
+ * Funció asíncrona per eliminar completament un usuari.
+ * 1. Elimina de la taula public.usuaris.
+ * 2. Si l'anterior és exitós, crida l'Edge Function per eliminar de auth.users.
+ * @param {string} email - L'email de l'usuari a eliminar.
+ * @returns {Promise<boolean>} Retorna true si les dues eliminacions són exitoses.
+ */
+async function deleteUserByEmailFunction(email) {
+  if (!email) {
+    console.error("Email de supressió no proporcionat.");
+    return false;
+  }
+
+  // =======================================================
+  // 1. ELIMINACIÓ de public.usuaris (Utilitza el client amb RLS)
+  // =======================================================
+  try {
+    const { error: dbError } = await supabase
+      .from("usuaris")
+      .delete()
+      .eq("email", email); 
+
+    if (dbError) {
+      console.error(
+        `❌ Error al eliminar l'usuari ${email} de public.usuaris (RLS o BD):`,
+        dbError.message
+      );
+      // Retornem false per RLS denegat o error de BD
+      return false; 
+    }
+  } catch (error) {
+    console.error(
+      `❌ Excepció durant la supressió de public.usuaris de ${email}:`,
+      error
+    );
+    return false;
+  }
+
+  // =======================================================
+  // 2. CRIDA A EDGE FUNCTION (Eliminació de auth.users amb Service Role)
+  // =======================================================
+  try {
+      // ⚠️ Necessites el token de l'usuari que fa l'acció (que ha de ser 'Compres')
+      const sessionData = (await supabase.auth.getSession()).data.session;
+      if (!sessionData) {
+          console.error("No hi ha sessió activa per obtenir el token.");
+          return false;
+      }
+      const token = sessionData.access_token;
+
+      const response = await fetch(DELETE_USUARIS_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` // Autentica la crida de l'Edge Function
+          },
+          body: JSON.stringify({ email: email }) // L'email és el cos de la petició
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+          console.error(
+              `❌ Error a l'eliminar de auth.users (Edge Function):`, 
+              result.error || 'Resposta Edge Function no OK'
+          );
+          // Si auth falla, retornem false, encara que public.usuaris s'hagi eliminat
+          return false; 
+      }
+      
+      // Tot ha anat bé.
+      return true; 
+
+  } catch (error) {
+      console.error(
+          `❌ Excepció durant la crida a l'Edge Function de supressió de ${email}:`,
+          error
+      );
+      return false;
+  }
+}
 
 // =======================================================
 // 🌟🌟 NOVA FUNCIÓ: CARREGAR CSS DINÀMICAMENT 🌟🌟
@@ -237,7 +319,8 @@ async function loadUsuarisTabContent(container, reloadCallback) {
     allRoles,
     allDepartaments,
     saveUserChangesFunction,
-    reloadCallback // ⚠️ Callback de recàrrega
+    reloadCallback,
+    deleteUserByEmailFunction
   );
   const llistaContainer = document.getElementById("llistaUsuarisContainer");
   if (llistaContainer) {

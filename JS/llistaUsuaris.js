@@ -11,6 +11,7 @@
  * @param {Array<string>} departaments - Array amb tots els noms de departaments disponibles.
  * @param {function} onSaveFunction - Funció asíncrona per guardar els canvis a Supabase.
  * @param {function} onReloadFunction - Funció per recarregar el component admin després de guardar.
+ * @param {function} onDeleteFunction - 🚨 NOU: Funció asíncrona per eliminar un usuari de Supabase.
  * @returns {HTMLElement} El div contenidor amb la taula.
  */
 export function createLlistaUsuarisTable(
@@ -18,7 +19,8 @@ export function createLlistaUsuarisTable(
   roles,
   departaments,
   onSaveFunction,
-  onReloadFunction
+  onReloadFunction,
+  onDeleteFunction // 🚨 NOU PARÀMETRE
 ) {
   const tableContainer = document.createElement("div");
   tableContainer.className = "llista-usuaris-container";
@@ -48,7 +50,6 @@ export function createLlistaUsuarisTable(
   };
 
   // 💡 HELPER CORREGIT: Funció per estandarditzar noms (elimina accents, espais a guions i minúscules)
-  // Això és clau per fer coincidir noms com "Gestió de recursos" amb la classe CSS "dpt-gestio-de-recursos".
   const standardizeName = (name) => {
     if (!name) return "";
 
@@ -140,7 +141,16 @@ export function createLlistaUsuarisTable(
         });
       });
 
-      // NOTA: Cal afegir el listener per als botons DELETE aquí un cop implementis la lògica.
+      // 🚨 NOU: Afegir listener per als botons DELETE
+      const deleteButtons = tableContainer.querySelectorAll(
+        ".action-btn.delete-btn"
+      );
+      deleteButtons.forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const email = e.target.dataset.email;
+          handleDelete(email); // Crida a la nova funció de gestió d'eliminació
+        });
+      });
     } catch (error) {
       console.error("Error al renderitzar la taula d'usuaris:", error);
       contentDiv.innerHTML =
@@ -149,7 +159,61 @@ export function createLlistaUsuarisTable(
   };
 
   // =======================================================
-  // 2. LÒGICA D'EDICIÓ I GUARDAT
+  // 2. LÒGICA D'ELIMINACIÓ
+  // =======================================================
+
+  /**
+   * 🚨 NOU: Funció asíncrona per gestionar l'eliminació d'un usuari.
+   * @param {string} email - L'email de l'usuari a eliminar.
+   */
+  const handleDelete = async (email) => {
+    const confirmation = confirm(
+      `Estàs segur que vols eliminar l'usuari amb email: ${email}? Aquesta acció no es pot desfer.`
+    );
+
+    if (!confirmation) {
+      return; // Cancel·lat per l'usuari
+    }
+
+    // 1. Cercar el botó DELETE corresponent per canviar l'estat
+    const deleteButton = tableContainer.querySelector(
+      `.action-btn.delete-btn[data-email="${email}"]`
+    );
+    if (deleteButton) {
+      deleteButton.textContent = "Eliminant...";
+      deleteButton.disabled = true;
+    }
+
+    try {
+      // 2. Cridar la funció d'eliminació de Supabase (passada com a paràmetre)
+      const success = await onDeleteFunction(email);
+
+      if (success) {
+        alert(`✅ Usuari ${email} eliminat correctament!`);
+        onReloadFunction(); // Recarregar la taula
+      } else {
+        alert(
+          "❌ Error a l'eliminar. Potser no tens permisos (RLS) o hi ha un error de connexió."
+        );
+        // Re-habilitar si falla
+        if (deleteButton) {
+          deleteButton.textContent = "🗑️ Eliminar";
+          deleteButton.disabled = false;
+        }
+      }
+    } catch (error) {
+      console.error("Error durant el procés d'eliminació:", error);
+      alert("❌ Error intern durant l'eliminació.");
+      // Re-habilitar si falla
+      if (deleteButton) {
+        deleteButton.textContent = "🗑️ Eliminar";
+        deleteButton.disabled = false;
+      }
+    }
+  };
+
+  // =======================================================
+  // 3. LÒGICA D'EDICIÓ I GUARDAT (Era la secció 2)
   // =======================================================
 
   /**
@@ -231,14 +295,18 @@ export function createLlistaUsuarisTable(
     cells[3].className = `dpt-cell dpt-${dptClass}`;
     cells[3].innerHTML = `<span class="dpt-badge">${originalDpt}</span>`;
 
-    // 4. Restaurar el botó d'Editar original
+    // 4. Restaurar el botó d'Editar i el de DELETE original
     const originalEmail = row.dataset.originalEmail;
     cells[4].innerHTML = `
       <button class="action-btn edit-btn" data-email="${originalEmail}">📝 Editar</button>
-      <button class="action-btn delete-btn" data-email="${originalEmail}">🗑️ Eliminar</button> 💥 CANVI AQUÍ: S'utilitza originalEmail, ja que user.email no està definit aquí.
+      <button class="action-btn delete-btn" data-email="${originalEmail}">🗑️ Eliminar</button> 
     `;
     cells[4].querySelector(".edit-btn").addEventListener("click", (e) => {
       toggleEditMode(e.target, originalEmail);
+    });
+    // 🚨 MODIFICAT: Afegir listener al botó DELETE restaurat
+    cells[4].querySelector(".delete-btn").addEventListener("click", (e) => {
+      handleDelete(originalEmail);
     });
 
     row.classList.remove("editing");

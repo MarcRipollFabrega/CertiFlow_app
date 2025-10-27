@@ -151,7 +151,7 @@ export function createAltaUsuarisCRUD(
       missatgeEstat.className = "status-message error";
     } finally {
       altaButton.disabled = false;
-      altaButton.textContent = "Crear Usuari i Enviar Correu";
+      altaButton.textContent = "Donar d'Alta";
     }
   });
 

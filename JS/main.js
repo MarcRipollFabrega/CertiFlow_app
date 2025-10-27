@@ -17,6 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const LOGIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-login`;
   //Alta usuari
   const ALTA_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-alta`;
+  //Delete usuari
+  const DELETE_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-delete-user`;
+
 
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
@@ -25,6 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.ALTA_USUARIS_FUNCTION_URL = ALTA_USUARIS_FUNCTION_URL;
   window.supabaseClient = supabaseClient;
+
+  window.DELETE_USUARIS_FUNCTION_URL = DELETE_USUARIS_FUNCTION_URL;
 
   // === 2. REFERÈNCIES ALS ELEMENTS DEL DOM ===
   const appContainer = document.getElementById("app-container");
