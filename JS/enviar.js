@@ -90,22 +90,25 @@ export function createEnviarComponent() {
   topSection.innerHTML = `
             <h2 class="section-title">Nou Document</h2>
 
-            <div class="form-group-inline">
-                <label for="doc_type">Tipus Document:</label>
-                <select id="doc_type" class="form-select">
-                    <option value="factura">Factura</option>
-                    <option value="albara">Albarà</option>
-                    <option value="contracte">Contracte</option>
-                </select>
-            </div>
+<div class="form-group-inline">
+    <label for="tipus_contracte">Tipus de Contracte:</label>
+    <select id="tipus_contracte" class="form-select">
+        <option value="" disabled selected>Selecciona un tipus</option>
+        <option value="menor">Menor</option>
+        <option value="licitacio">Licitació</option>
+        <option value="fora_lcsp">Fora LCSP</option>
+    </select>
+</div>
 
             <div class="form-group-inline">
-                <label for="tecnic">Tècnic:</label>
-                <select id="tecnic" class="form-select">
-                    <option value="joan">Joan</option>
-                    <option value="anna">Anna</option>
-                </select>
-            </div>
+    <label for="tecnic">Tècnic:</label>
+    <input 
+        type="text" 
+        id="tecnic" 
+        class="form-input" 
+        list="llistaTecnics" 
+        placeholder="Escriu el nom del tècnic"
+    ></div>
 
             <div class="form-group-inline">
                 <label for="data">Data:</label>

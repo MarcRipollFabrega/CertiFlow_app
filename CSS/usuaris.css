@@ -357,7 +357,7 @@ table tr.editing td:last-child {
 }
 
 /* 🟥 ROL: Cap de secció Tècnic */
-.admin-table .rol-cap-de-seccio-tecnic .role-badge {
+.admin-table .rol-cap-de-seccio .role-badge {
     background-color: #ffe0b2; /* Taronja molt clar */
     color: #e65100;           /* Taronja fosc */
 }
@@ -372,6 +372,11 @@ table tr.editing td:last-child {
 .admin-table .rol-juridic .role-badge {
     background-color: #e1bee7; /* Lila clar */
     color: #6a1b9a;           /* Lila fosc */
+}
+/* ⚙️ NOU: ROL Tècnic (Sanejada a 'tecnic') */
+.admin-table .rol-tecnic .role-badge {
+    background-color: #d1e7dd; /* Verd-gris clar */
+    color: #08665b;            /* Verd fosc */
 }
 
 /* ================================================= */
