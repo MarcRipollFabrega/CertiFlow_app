@@ -1,4 +1,6 @@
-import { createPasswordSetupForm } from "./password-reset.js";
+// A JS/main.js
+
+import { initializePasswordSetup } from "./password-setup.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // === 1. CONFIGURACIÓ SUPABASE (VALORS NECESSARIS PER A L'SDK) ===
@@ -16,21 +18,31 @@ document.addEventListener("DOMContentLoaded", () => {
   //Alta usuari
   const ALTA_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-alta`;
 
-  // 🛠️ INICIALITZACIÓ CORREGIDA: L'SDK requereix ambdós valors (URL i ANON KEY)
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
   );
 
   window.ALTA_USUARIS_FUNCTION_URL = ALTA_USUARIS_FUNCTION_URL;
-
   window.supabaseClient = supabaseClient;
 
-  // === 2. REFERÈNCIES I 3. FUNCIONS AUXILIARS ===
+  // === 2. REFERÈNCIES ALS ELEMENTS DEL DOM ===
+  const appContainer = document.getElementById("app-container");
+
+  // VISTES INTERCANVIABLES DINS DE .login-right
+  const loginView = document.getElementById("loginView"); // Contenidor del Login
+  const setPasswordContainer = document.getElementById("setPasswordContainer"); // Contenidor Set Password
+
+  // Elements del formulari de Login
   const loginForm = document.getElementById("loginForm");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const loginButton = document.getElementById("loginButton");
+
+  // Elements del formulari Set Password (mantinguts com a referència)
+  const setPasswordForm = document.getElementById("setPasswordForm");
+
+  // === 3. FUNCIONS AUXILIARS ===
 
   function showToast(message, type) {
     const toastContainer = document.getElementById("toast-container");
@@ -49,12 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Fade out and remove (4 segons)
     setTimeout(() => {
-      // ⚠️ IMPORTANT: Amb la crida immediata a loadAppDashboard,
-      // el contenidor ha de ser re-injectat i l'objecte 'toast' ha de
-      // mantenir la seva referència per a aquest codi.
       toast.style.opacity = "0";
       setTimeout(() => {
-        // Comprovar si el toast encara és al DOM (ja que el DOM es canvia)
         if (toast.parentNode) {
           toast.remove();
         }
@@ -62,25 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4000);
   }
 
-  // 🛠️ FUNCIÓ MODIFICADA: Carrega l'esquelet del dashboard.
-  // S'ha eliminat la lògica del toast d'èxit d'aquí.
   function loadAppDashboard() {
-    const appContainer = document.getElementById("app-container");
+    // Aquesta funció carrega la vista del dashboard un cop autenticat
     if (appContainer) {
-      // Preservem el contenidor de toast si existeix (no el sobreescrivim)
-      const toastContainer = document.getElementById("toast-container");
-      let currentToastContainer = "";
-      if (toastContainer) {
-        // Això assegura que l'element #toast-container sigui el mateix objecte
-        // encara que el seu contingut es canviï.
-        currentToastContainer = toastContainer.outerHTML;
-      }
-
-      // 1. Canvi de layout (el contenidor principal)
+      // 1. Canvi de classes per a la nova vista
       appContainer.classList.remove("login-container");
       appContainer.classList.add("app-layout");
 
-      // 2. Injecció de l'esquelet HTML del dashboard (amb la capçalera corregida)
+      // 2. Injecta el nou HTML del Dashboard
       appContainer.innerHTML = `
             <header class="top-app-bar" id="app-header">
                 
@@ -105,48 +102,45 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="loading-spinner"></div>
             </main>
             
-           <footer class="bottom-app-bar" id="app-footer">
-        <div class="footer-info" id="user-info-footer"></div>
-        
-        <div class="footer-menu-container">
-            <ul id="navbar-menu" class="navbar-menu">
-                <li data-id="enviar" class="list active"> <a href="#enviar">
-                        <span class="icon">📤</span>
-                        <span class="text">Enviar</span>
-                    </a>
-                </li>
-                <li data-id="consultar" class="list">
-                    <a href="#consultar">
-                        <span class="icon">🔍</span>
-                        <span class="text">Consultar</span>
-                    </a>
-                </li>
-                <li data-id="admin" class="list visually-hidden">
-                    <a href="#admin">
-                        <span class="icon">⚙️</span>
-                        <span class="text">Admin</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="footer-logout" id="logout-footer-container"></div>
-    </footer>
-            
-            ${currentToastContainer} 
+            <footer class="bottom-app-bar" id="app-footer">
+                <div class="footer-info" id="user-info-footer"></div>
+                
+                <div class="footer-menu-container">
+                    <ul id="navbar-menu" class="navbar-menu">
+                        <li data-id="enviar" class="list active"> <a href="#enviar">
+                                <span class="icon">📤</span>
+                                <span class="text">Enviar</span>
+                            </a>
+                        </li>
+                        <li data-id="consultar" class="list">
+                            <a href="#consultar">
+                                <span class="icon">🔍</span>
+                                <span class="text">Consultar</span>
+                            </a>
+                        </li>
+                        <li data-id="admin" class="list visually-hidden">
+                            <a href="#admin">
+                                <span class="icon">⚙️</span>
+                                <span class="text">Admin</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="footer-logout" id="logout-footer-container"></div>
+            </footer>
         `;
 
-      // 3. LÒGICA DEL TEMA
+      // 3. LÒGICA DEL TEMA (Ha de venir després de que el DOM s'hagi actualitzat)
       const themeToggle = document.getElementById("theme-toggle");
       const savedTheme = localStorage.getItem("theme");
 
-      // Aplicació de la classe de tema guardada.
       if (savedTheme === "light") {
         document.body.classList.add("light-mode");
-        if (themeToggle) themeToggle.checked = true; // Marca el checkbox si és clar
+        if (themeToggle) themeToggle.checked = true;
       } else {
         document.body.classList.remove("light-mode");
-        if (themeToggle) themeToggle.checked = false; // Desmarca si és fosc (default)
+        if (themeToggle) themeToggle.checked = false;
       }
 
       if (themeToggle) {
@@ -161,66 +155,85 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      // 4. Càrrega del codi del dashboard
-      const script = document.createElement("script");
-      script.src = "/JS/dashboard.js";
-      script.onload = () => {
-        // ⚠️ Comprovem que la funció existeixi abans de cridar-la
+      // 4. Càrrega dinàmica del codi del dashboard
+      const dashboardScriptId = "dashboard-script";
+      if (!document.getElementById(dashboardScriptId)) {
+        const script = document.createElement("script");
+        script.id = dashboardScriptId;
+        script.src = "/JS/dashboard.js";
+        script.onload = () => {
+          if (window.renderDashboard) {
+            window.renderDashboard();
+          }
+        };
+        document.body.appendChild(script);
+      } else {
         if (window.renderDashboard) {
           window.renderDashboard();
         }
-      };
-      document.body.appendChild(script);
+      }
     }
   }
 
-  // === 5. LÒGICA D'AUTENTICACIÓ ===
+  // === 4. LÒGICA DE GESTIÓ DE CONTRASENYA SEGURA ===
 
- async function checkSession() {
-   const {
-     data: { session },
-   } = await supabaseClient.auth.getSession();
-   const appContainer = document.getElementById("app-container");
+  // 🛑 PAS CLAU: Intentem inicialitzar el flux segur PRIMER.
+  const isInPasswordSetupMode = initializePasswordSetup(supabaseClient);
 
-   // Neteja l'error anterior, si n'hi ha
-   // hideLoginForm();
+  if (isInPasswordSetupMode) {
+    console.log(
+      "Password Setup mode gestionat amb èxit. S'atura la lògica de checkSession."
+    );
+    return; // ⬅️ AQUEST RETURN ÉS CRUCIAL
+  }
 
-   if (session) {
-     const user = session.user;
-     const userMetadata = user.user_metadata || {};
+  // === 5. LÒGICA D'AUTENTICACIÓ (SESSIÓ NORMAL) ===
 
-     // 🚨 1. PAS CLAU: DETECTAR LA BANDERA 'initial_setup'
-     // El teu Edge Function l'estableix a false per a usuaris nous invitats.
-     const initialSetupPending = userMetadata.initial_setup === false;
+  async function checkSession() {
+    // 1. Assegurar que l'estat d'autenticació es resol abans de continuar.
+    let session = null;
+    let authReady = false;
 
-     if (initialSetupPending) {
-       // 2. L'USUARI S'HA LOGUEJAT PER L'ENLLAÇ, PERÒ NECESSITA CONTRASENYA
-       console.log(
-         "Usuari pendent d'establir contrasenya. Carregant formulari."
-       );
+    return new Promise((resolve) => {
+      const { data: listener } = supabaseClient.auth.onAuthStateChange(
+        async (event, currentSession) => {
+          if (!authReady) {
+            session = currentSession;
+            authReady = true;
+            listener.subscription.unsubscribe();
+            resolve();
+          }
+        }
+      );
+      setTimeout(() => {
+        if (!authReady) {
+          supabaseClient.auth
+            .getSession()
+            .then(({ data }) => {
+              session = data.session;
+              resolve();
+            })
+            .catch(resolve);
+        }
+      }, 500);
+    }).then(async () => {
+      // La lògica de hash (handleInitialView) ja NO és aquí.
 
-       // Reemplaça el contingut actual amb el formulari de contrasenya
-       appContainer.innerHTML = "";
+      // 2. Lògica normal: Si hi ha sessió, carregar dashboard
+      if (session) {
+        console.log("Sessió activa. Carregant Dashboard.");
+        loadAppDashboard();
+      } else {
+        // 3. NO HI HA SESSIÓ. MOSTRA EL FORMULARI DE LOGIN
+        console.log("No hi ha sessió. Mostrant Login.");
+        // Assegurar que el loginView és visible i SetPasswordContainer està ocult
+        if (loginView) loginView.style.display = "block";
+        if (setPasswordContainer) setPasswordContainer.style.display = "none";
+      }
+    });
+  }
 
-       // 3. Importem la funció d'altres fitxers (ja la tens al main.js)
-       // Assegura't que createPasswordSetupForm estigui accessible aquí.
-       const passwordSetupForm = createPasswordSetupForm(
-         supabaseClient,
-         loadAppDashboard // Callback per carregar el dashboard després de l'èxit
-       );
-
-       appContainer.appendChild(passwordSetupForm);
-     } else {
-       // 4. SESSIÓ ESTABLIDA I CONTRASENYA CONFIGURADA. CARREGA EL DASHBOARD
-       console.log("Sessió activa. Carregant Dashboard.");
-       loadAppDashboard();
-     }
-   } else {
-     // 5. NO HI HA SESSIÓ. MOSTRA EL FORMULARI DE LOGIN
-     console.log("No hi ha sessió. Mostrant Login.");
-     showLoginForm(); // (O la funció que mostri el teu formulari d'inici de sessió)
-   }
- }
+  // === 6. LISTENER DEL FORMULARI D'INICI DE SESSIÓ NORMAL ===
 
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
@@ -283,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
           console.error("Error establint la sessió:", sessionError);
           showToast("Error establint la sessió.", "error");
         } else {
-          // 🛠️ 1. MOSTRAR EL TOAST D'ÈXIT IMMEDIATAMENT
+          // 🛠️ MOSTRAR EL TOAST D'ÈXIT IMMEDIATAMENT
           showToast(
             "Inici de sessió correcte! Carregant aplicació...",
             "success"

@@ -3,7 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-       <title>CertiFlow</title>
+    <meta http-equiv="Content-Security-Policy" 
+      content="default-src 'self'; 
+               script-src 'self' https://cdn.jsdelivr.net; 
+               connect-src 'self' wss://*.supabase.co https://*.supabase.co; 
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
+               font-src 'self' https://fonts.gstatic.com;
+               img-src 'self' data:;">
+    <title>CertiFlow</title>
     <link rel="stylesheet" href="CSS/reset.css" />
     <link rel="stylesheet" href="CSS/login.css" />
     <link rel="stylesheet" href="CSS/dashboard.css" />
@@ -16,6 +23,8 @@
   <body>
     <!-- Contenidor principal per al login o el dashboard -->
     <div class="login-container" id="app-container">
+      
+      <!-- PART ESQUERRA: SVG/LOGO. AQUESTA VISTA ES MANTÉ FIXA. -->
       <div class="login-left">
         <!--?SVG aqui afegire el SVG del meu logo -->
        <div class="svg-placeholder">
@@ -24,51 +33,92 @@
             alt="Logo d'Empresa" 
             class="animated-logo-png"
         >
-    </div>
+      </div>
         <h1>Benvingut/da</h1>
         <p>Accedeix al teu compte de forma segura.</p>
       </div>
-<!--?Formulari de login-->
+
+      <!-- PART DRETA: FORMULARIS (Login o SetPassword). -->
       <div class="login-right">
-        <h2>Inicia Sessió</h2>
-        <form id="loginForm" class="login-form">
-          <div class="input-group">
-            <input
-              type="email"
-              id="email"
-              required
-              autocomplete="email"
-              
-              data-label="Correu Electrònic"
-              placeholder=" "
-            />
-            <label for="email" class="floating-label">Correu Electrònic</label>
-          </div>
+        
+        <!-- === 1. FORMULARI D'INICI DE SESSIÓ NORMAL (Visible per defecte) === -->
+        <!-- Hem d'embolicar el contingut del login en un div amb ID "loginView" -->
+        <div id="loginView"> 
+            <h2>Inicia Sessió</h2>
+            <form id="loginForm" class="login-form">
+              <div class="input-group">
+                <input
+                  type="email"
+                  id="email"
+                  required
+                  autocomplete="email"
+                  data-label="Correu Electrònic"
+                  placeholder=" "
+                />
+                <label for="email" class="floating-label">Correu Electrònic</label>
+              </div>
 
-          <div class="input-group">
-            <input
-              type="password"
-              id="password"
-              required
-              autocomplete="current-password"
-              data-label="Contrasenya"
-              placeholder=" "
-            />
-            <label for="password" class="floating-label">Contrasenya</label>
-          </div>
+              <div class="input-group">
+                <input
+                  type="password"
+                  id="password"
+                  required
+                  autocomplete="current-password"
+                  data-label="Contrasenya"
+                  placeholder=" "
+                />
+                <label for="password" class="floating-label">Contrasenya</label>
+              </div>
 
-          <button type="submit" id="loginButton">Accedir</button>
-        </form>
+              <button type="submit" id="loginButton">Accedir</button>
+            </form>
+        </div>
+        
+        <!-- === 2. FORMULARI PER ESTABLIR LA CONTRASENYA (Ocult per defecte) === -->
+        <!-- ✅ AQUEST CONTENIDOR ARA ESTÀ DINS DE login-right -->
+        <div id="setPasswordContainer" style="display: none;">
+            <h2>Estableix la teva Contrasenya</h2>
+            <form id="setPasswordForm" class="login-form">
+                <div class="input-group">
+                    <input
+                        type="password"
+                        id="newPassword"
+                        required
+                        autocomplete="new-password"
+                        data-label="Nova Contrasenya"
+                        placeholder=" "
+                    />
+                    <label for="newPassword" class="floating-label">Nova Contrasenya</label>
+                </div>
+
+                <div class="input-group">
+                    <input
+                        type="password"
+                        id="confirmNewPassword"
+                        required
+                        autocomplete="new-password"
+                        data-label="Confirma Contrasenya"
+                        placeholder=" "
+                    />
+                    <label for="confirmNewPassword" class="floating-label">Confirma Contrasenya</label>
+                </div>
+
+                <button type="submit" id="setPasswordButton">Guardar Contrasenya</button>
+                <p class="small-text" id="passwordMessage" style="color: red;"></p>
+            </form>
+        </div>
+        
       </div>
     </div>
     
     <!-- Contenidor per als missatges (Toast) -->
     <div id="toast-container" class="toast-container"></div>
 
-    
-
     <!-- Codi del SDK de Supabase (MOLT IMPORTANT: abans del teu script) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- El teu script de LOGICA DE CONTRASENYA -->
+    <script type="module" src="JS/password-setup.js"></script>
+    <!-- El teu script principal -->
     <script type="module" src="JS/main.js"></script>
   </body>
 </html>
