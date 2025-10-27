@@ -134,21 +134,41 @@ async function loadDepartamentsFunction(selectElement) {
   }
 }
 
-async function loadUsuarisList() {
-  // Funció per carregar la llista d'usuaris (deixem l'original per a compatibilitat)
-  try {
-    const { data: usuaris, error } = await supabase
-      .from("usuaris")
-      .select("nom, email, role, nom_departament")
-      .order("nom", { ascending: true });
+a/**
+ * Funció per carregar la llista d'usuaris amb un filtre opcional.
+ * @param {string} searchTerm - El text a buscar (nom, email, rol, departament). 🚨 NOU
+ * @returns {Array<Object>}
+ */
+async function loadUsuarisList(searchTerm = "") {
+  // 🚨 Lògica de consulta modificada
+  let query = supabase
+    .from("usuaris")
+    .select("id, nom, email, role, nom_departament")
+    .order("nom", { ascending: true }); // Ordenació per defecte
 
-    if (error) throw error;
+  // 🚨 NOU: Aplicar filtre si hi ha un terme de cerca
+  if (searchTerm) {
+    // Escapa caràcters especials i embolcalla el terme de cerca
+    const searchPattern = `%${searchTerm.toLowerCase()}%`;
 
-    return usuaris;
-  } catch (error) {
-    console.error("❌ Error carregant llista d'usuaris des de la BD:", error);
+    // Utilitzem .or() per buscar coincidències amb ILIKE (case-insensitive LIKE) en quatre camps
+    query = query.or(
+      `nom.ilike.${searchPattern}, email.ilike.${searchPattern}, role.ilike.${searchPattern}, nom_departament.ilike.${searchPattern}`
+    );
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error al carregar la llista d'usuaris:", error);
+    // Mostrar missatge de l'error RLS a la consola
+    if (error.code === '42501') { 
+        console.error("Error RLS: Potser no tens permisos per llegir la taula.");
+    }
     return [];
   }
+
+  return data;
 }
 
 async function saveUserChangesFunction(email, updatedFields) {

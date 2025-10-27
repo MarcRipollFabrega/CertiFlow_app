@@ -25,8 +25,12 @@ export function createLlistaUsuarisTable(
   const tableContainer = document.createElement("div");
   tableContainer.className = "llista-usuaris-container";
 
+  // 🚨 HTML AMB INPUT DE CERCA
   tableContainer.innerHTML = `
         <h3 class="crud-title">Llistat d'Usuaris</h3>
+        <div class="filters-container">
+            <input type="text" id="userSearchInput" placeholder="Cerca per nom, email, rol o departament..." class="search-input">
+        </div>
         <div id="llistaUsuarisContent" class="table-responsive">
             <p>Carregant dades...</p>
         </div>
@@ -36,7 +40,7 @@ export function createLlistaUsuarisTable(
   const contentDiv = tableContainer.querySelector("#llistaUsuarisContent");
   const statusMessage = tableContainer.querySelector("#llistaUsuarisEstat");
 
-  // Funció auxiliar per crear l'HTML del select
+  // Funció auxiliar per crear l'HTML del select (el teu codi original)
   const createSelectHTML = (fieldName, optionsArray, currentValue) => {
     let optionsHTML = optionsArray
       .map(
@@ -49,7 +53,7 @@ export function createLlistaUsuarisTable(
     return `<select data-field="${fieldName}" class="edit-select">${optionsHTML}</select>`;
   };
 
-  // 💡 HELPER CORREGIT: Funció per estandarditzar noms (elimina accents, espais a guions i minúscules)
+  // 💡 HELPER CORREGIT: Funció per estandarditzar noms (el teu codi original)
   const standardizeName = (name) => {
     if (!name) return "";
 
@@ -65,14 +69,36 @@ export function createLlistaUsuarisTable(
     return standardized.replace(/\s+/g, "-");
   };
 
+  // =======================================================
+  // 🚨 LÒGICA DE CERCA (DEBOUNCE)
+  // =======================================================
+  let currentSearchTerm = "";
+  const handleSearch = (searchTerm) => {
+    // 1. Netejar espais
+    const term = searchTerm.trim().toLowerCase();
+
+    // 2. Comprovar si hi ha un canvi real
+    if (term === currentSearchTerm) return;
+
+    currentSearchTerm = term;
+
+    // 3. Recarregar la taula amb el nou filtre
+    if (window.searchTimeout) {
+      clearTimeout(window.searchTimeout);
+    }
+    window.searchTimeout = setTimeout(() => {
+      renderTable(currentSearchTerm);
+    }, 300); // 300ms de debounce
+  };
+
   // Funció per carregar la taula
-  const renderTable = async () => {
+  const renderTable = async (searchTerm = "") => {
     contentDiv.innerHTML =
       '<p class="status-message info">Carregant d\'usuaris... ⏳</p>';
-    statusMessage.textContent = "";
+    statusMessage.textContent = "Carregant dades...";
 
     try {
-      const usuaris = await loadUsuarisFunction(); // Crida a la funció de càrrega
+      const usuaris = await loadUsuarisFunction(searchTerm); // Crida a la funció de càrrega amb filtre
 
       if (!usuaris || usuaris.length === 0) {
         contentDiv.innerHTML =
@@ -130,7 +156,7 @@ export function createLlistaUsuarisTable(
       statusMessage.textContent = `✅ S'han carregat ${usuaris.length} usuaris.`;
       statusMessage.className = "status-message success";
 
-      // Afegir listeners d'esdeveniments als botons d'acció
+      // Afegir listeners d'esdeveniments als botons d'acció (EDITAR)
       const editButtons = tableContainer.querySelectorAll(
         ".action-btn.edit-btn"
       );
@@ -141,14 +167,14 @@ export function createLlistaUsuarisTable(
         });
       });
 
-      // 🚨 NOU: Afegir listener per als botons DELETE
+      // Afegir listener per als botons DELETE
       const deleteButtons = tableContainer.querySelectorAll(
         ".action-btn.delete-btn"
       );
       deleteButtons.forEach((button) => {
         button.addEventListener("click", (e) => {
           const email = e.target.dataset.email;
-          handleDelete(email); // Crida a la nova funció de gestió d'eliminació
+          handleDelete(email);
         });
       });
     } catch (error) {
@@ -159,23 +185,18 @@ export function createLlistaUsuarisTable(
   };
 
   // =======================================================
-  // 2. LÒGICA D'ELIMINACIÓ
+  // 2. LÒGICA D'ELIMINACIÓ (El teu codi original)
   // =======================================================
 
-  /**
-   * 🚨 NOU: Funció asíncrona per gestionar l'eliminació d'un usuari.
-   * @param {string} email - L'email de l'usuari a eliminar.
-   */
   const handleDelete = async (email) => {
     const confirmation = confirm(
       `Estàs segur que vols eliminar l'usuari amb email: ${email}? Aquesta acció no es pot desfer.`
     );
 
     if (!confirmation) {
-      return; // Cancel·lat per l'usuari
+      return;
     }
 
-    // 1. Cercar el botó DELETE corresponent per canviar l'estat
     const deleteButton = tableContainer.querySelector(
       `.action-btn.delete-btn[data-email="${email}"]`
     );
@@ -185,17 +206,15 @@ export function createLlistaUsuarisTable(
     }
 
     try {
-      // 2. Cridar la funció d'eliminació de Supabase (passada com a paràmetre)
       const success = await onDeleteFunction(email);
 
       if (success) {
         alert(`✅ Usuari ${email} eliminat correctament!`);
-        onReloadFunction(); // Recarregar la taula
+        onReloadFunction();
       } else {
         alert(
           "❌ Error a l'eliminar. Potser no tens permisos (RLS) o hi ha un error de connexió."
         );
-        // Re-habilitar si falla
         if (deleteButton) {
           deleteButton.textContent = "🗑️ Eliminar";
           deleteButton.disabled = false;
@@ -204,7 +223,6 @@ export function createLlistaUsuarisTable(
     } catch (error) {
       console.error("Error durant el procés d'eliminació:", error);
       alert("❌ Error intern durant l'eliminació.");
-      // Re-habilitar si falla
       if (deleteButton) {
         deleteButton.textContent = "🗑️ Eliminar";
         deleteButton.disabled = false;
@@ -213,29 +231,20 @@ export function createLlistaUsuarisTable(
   };
 
   // =======================================================
-  // 3. LÒGICA D'EDICIÓ I GUARDAT (Era la secció 2)
+  // 3. LÒGICA D'EDICIÓ I GUARDAT (El teu codi original)
   // =======================================================
 
-  /**
-   * Funció per alternar entre mode visualització i edició/guardat.
-   */
   const toggleEditMode = (button, email) => {
+    // ... (el teu codi de toggleEditMode)
     const row = button.closest("tr");
     const isEditing = row.classList.contains("editing");
 
-    // Les cel·les
     const cells = row.querySelectorAll("td");
 
     if (!isEditing) {
-      // -----------------------------------
-      // --- MODE EDICIÓ (Transformació de la fila) ---
-      // -----------------------------------
-
       row.classList.add("editing");
 
-      // 1. Lectura dels valors actuals i guardat al dataset de la fila
       const currentRoleText = cells[2].querySelector(".role-badge").textContent;
-      // Lectura del departament
       const currentDptText = cells[3].querySelector(".dpt-badge").textContent;
 
       row.dataset.originalName = cells[0].textContent;
@@ -243,11 +252,9 @@ export function createLlistaUsuarisTable(
       row.dataset.originalRole = currentRoleText;
       row.dataset.originalDpt = currentDptText;
 
-      // 2. Transformació de les cel·les a Inputs/Selects
       cells[0].innerHTML = `<input type="text" data-field="nom" value="${row.dataset.originalName}" class="edit-input-text" required>`;
       cells[1].innerHTML = `<input type="email" data-field="email" value="${row.dataset.originalEmail}" class="edit-input-text" required>`;
 
-      // Selects
       cells[2].innerHTML = createSelectHTML("role", roles, currentRoleText);
       cells[3].innerHTML = createSelectHTML(
         "nom_departament",
@@ -255,13 +262,11 @@ export function createLlistaUsuarisTable(
         row.dataset.originalDpt
       );
 
-      // 3. Transformació dels botons (Accions)
       cells[4].innerHTML = `
         <button class="action-btn save-btn">💾 Guardar</button>
         <button class="action-btn cancel-btn">❌ Cancel·lar</button>
       `;
 
-      // 4. Afegir listeners per a Guardar i Cancel·lar
       cells[4]
         .querySelector(".save-btn")
         .addEventListener("click", async () => {
@@ -273,29 +278,23 @@ export function createLlistaUsuarisTable(
     }
   };
 
-  /**
-   * Funció per restaurar la fila al seu estat original.
-   */
   const restoreRow = (row) => {
+    // ... (el teu codi de restoreRow)
     const cells = row.querySelectorAll("td");
 
-    // 1. Restaurar el contingut de les cel·les amb els valors originals del dataset
     cells[0].textContent = row.dataset.originalName;
     cells[1].textContent = row.dataset.originalEmail;
 
-    // 2. Restaurar el badge del rol i les seves classes
     const originalRole = row.dataset.originalRole;
     const rolClass = standardizeName(originalRole);
     cells[2].className = `role-cell rol-${rolClass}`;
     cells[2].innerHTML = `<span class="role-badge">${originalRole}</span>`;
 
-    // 3. Restaurar el badge del departament i les seves classes
     const originalDpt = row.dataset.originalDpt;
     const dptClass = standardizeName(originalDpt);
     cells[3].className = `dpt-cell dpt-${dptClass}`;
     cells[3].innerHTML = `<span class="dpt-badge">${originalDpt}</span>`;
 
-    // 4. Restaurar el botó d'Editar i el de DELETE original
     const originalEmail = row.dataset.originalEmail;
     cells[4].innerHTML = `
       <button class="action-btn edit-btn" data-email="${originalEmail}">📝 Editar</button>
@@ -304,7 +303,6 @@ export function createLlistaUsuarisTable(
     cells[4].querySelector(".edit-btn").addEventListener("click", (e) => {
       toggleEditMode(e.target, originalEmail);
     });
-    // 🚨 MODIFICAT: Afegir listener al botó DELETE restaurat
     cells[4].querySelector(".delete-btn").addEventListener("click", (e) => {
       handleDelete(originalEmail);
     });
@@ -312,16 +310,13 @@ export function createLlistaUsuarisTable(
     row.classList.remove("editing");
   };
 
-  /**
-   * Funció asíncrona per recollir les dades i cridar la funció de guardat
-   */
   const saveChanges = async (
     row,
     originalEmail,
     onSaveFunction,
     onReloadFunction
   ) => {
-    // 1. Deshabilitar botons mentre es guarda
+    // ... (el teu codi de saveChanges)
     const saveButton = row.querySelector(".save-btn");
     const cancelButton = row.querySelector(".cancel-btn");
     saveButton.textContent = "Guardant...";
@@ -329,7 +324,6 @@ export function createLlistaUsuarisTable(
     cancelButton.disabled = true;
 
     try {
-      // 2. Recollir els valors nous
       const newName = row.querySelector('input[data-field="nom"]').value;
       const newEmail = row.querySelector('input[data-field="email"]').value;
       const newRole = row.querySelector('select[data-field="role"]').value;
@@ -337,7 +331,6 @@ export function createLlistaUsuarisTable(
         'select[data-field="nom_departament"]'
       ).value;
 
-      // 3. Preparar les dades per a l'actualització
       const updatedFields = {
         nom: newName,
         email: newEmail,
@@ -345,17 +338,15 @@ export function createLlistaUsuarisTable(
         nom_departament: newDpt,
       };
 
-      // 4. Cridar la funció de guardat de Supabase.
       const success = await onSaveFunction(originalEmail, updatedFields);
 
       if (success) {
         alert(`✅ Usuari ${newName} (${newEmail}) actualitzat correctament!`);
-        onReloadFunction(); // Recarregar la taula
+        onReloadFunction();
       } else {
         alert(
           "❌ Error al guardar. Potser no tens permisos (RLS) o hi ha un error de connexió."
         );
-        // Re-habilitar botons si falla
         saveButton.textContent = "💾 Guardar";
         saveButton.disabled = false;
         cancelButton.disabled = false;
@@ -363,15 +354,26 @@ export function createLlistaUsuarisTable(
     } catch (error) {
       console.error("Error durant el procés de guardat:", error);
       alert("❌ Error intern durant el guardat.");
-      // Re-habilitar botons si falla
       saveButton.textContent = "💾 Guardar";
       saveButton.disabled = false;
       cancelButton.disabled = false;
     }
   };
 
-  // Inicialitzar la càrrega de la taula
+  // =======================================================
+  // 🚨 INICIALITZACIÓ CORREGIDA
+  // =======================================================
+
+  // 1. Inicialitzar la càrrega de la taula
   renderTable();
+
+  // 2. Afegir listener al camp de cerca
+  const searchInput = tableContainer.querySelector("#userSearchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      handleSearch(e.target.value);
+    });
+  }
 
   return tableContainer;
 }
