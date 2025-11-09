@@ -1,0 +1,259 @@
+/* --------------------------------------------------------------------------
+  LÒGICA D'EXTRACCIÓ DE DADES DES DE PDFS DE FACTURES
+  -------------------------------------------------------------------------- */ 
+  // --------------------------------------------------------------------------
+ // CONSTANTS I PATRONS DE RECONEIXEMENT
+ // --------------------------------------------------------------------------  
+export const KNOWN_PROVIDERS = [
+  "Serveis Consultoria Global, SLP",
+  "Material Oficina Ràpid, SA",
+  "Distribuïdora Tèxtil Mediterrània",
+  "Tecno Solucions Innova, SL",
+];
+export const KNOWN_TECNICS = [
+  "Laura Ferrer",
+  "Marta Lopez",
+  "Elena Jimenez",
+  "Carla Puig",
+];
+const KNOWN_CITIES = ["VALENCIA", "BARCELONA", "MADRID", "SEVILLA", "VALLÈS"];
+
+// Patró per a preus senzills (amb o sense separadors de milers)
+const PRICE_SIMPLE_PATTERN =
+  /([0-9]{1,3}(?:[.,\s][0-9]{3})*[.,][0-9]{2}|[0-9]+[.,][0-9]{2})/i;
+// --------------------------------------------------------------------------
+// FUNCIONS D'UTILITAT
+// --------------------------------------------------------------------------       
+export function renderTable(data, tableContainer) {
+  tableContainer.innerHTML = "";
+  const table = document.createElement("table");
+  const thead = table.createTHead();
+  const tbody = document.createElement("tbody");
+  table.appendChild(tbody);
+
+// Capçaleres
+  const headerRow = thead.insertRow();
+  data.headers.forEach((headerText) => {
+    const th = document.createElement("th");
+    th.textContent = headerText;
+    headerRow.appendChild(th);
+  });
+
+  // Dades
+  data.rows.forEach((rowData) => {
+    const row = tbody.insertRow();
+    rowData.forEach((text) => {
+      const cell = row.insertCell();
+      cell.textContent = text;
+    });
+  });
+
+  tableContainer.appendChild(table);
+}
+// --------------------------------------------------------------------------
+// PREPARACIÓ DE DADES PER A LA BASE DE DADES
+// --------------------------------------------------------------------------       
+export function prepareDataForDB(extractedData) {
+  const dbObject = {};
+  extractedData.rows.forEach((row) => {
+    const fieldName = row[0];
+    const value = row[1];
+    let dbKey = fieldName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[€\(\)\/]/g, "")
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9_]/g, "")
+      .toLowerCase();
+    dbObject[dbKey] = value;
+  });
+  return dbObject;
+}
+
+// --------------------------------------------------------------------------
+// FUNCIONS PRINCIPALS D'EXTRACCIÓ
+// --------------------------------------------------------------------------   
+async function getFullTextFromPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items.map((item) => item.str).join(" ");
+    fullText += pageText + "\n";
+  }
+  return fullText;
+}
+
+// Normalització de preus a format numèric amb dos decimals
+function normalizePrice(totalStr) {
+  if (totalStr === "N/D") {
+    return "N/D";
+  }
+  let value = totalStr;
+  const decimalSeparator =
+    value.includes(",") && value.match(/,(\d{2})$/)
+      ? ","
+      : value.includes(".") && value.match(/\.(\d{2})$/)
+      ? "."
+      : null;
+  if (decimalSeparator) {
+    const thousandSeparator = decimalSeparator === "," ? "." : ",";
+
+    // 1. Eliminar separadors de milers
+    value = value.replace(new RegExp("\\" + thousandSeparator, "g"), "");
+    // 2. Canviar el separador decimal per punt
+    value = value.replace(decimalSeparator, ".");
+
+    return parseFloat(value).toFixed(2);
+  } else {
+    // En cas de format irregular, intentar netejar i parsejar
+    const cleanedValue = value.replace(/[^0-9.]/g, "");
+    if (cleanedValue) {
+      return parseFloat(cleanedValue).toFixed(2);
+    }
+    return "N/D";
+  }
+}
+
+/**
+// Extrau dades específiques d'un fitxer PDF de factura.
+ * @returns {Promise<object>} 
+ */
+// --------------------------------------------------------------------------
+// FUNCIONS PRINCIPALS D'EXTRACCIÓ
+// --------------------------------------------------------------------------   
+export async function extractDataFromPDF(file) {
+  let fullText = "";
+  try {
+    fullText = await getFullTextFromPDF(file);
+    fullText = fullText
+      .replace(/\u00a0/g, " ")
+      .replace(/\s\s+/g, " ")
+      .trim();
+    console.log(
+      "Text extret del PDF (fragment):",
+      fullText.substring(0, 300) + "..."
+    );
+  } catch (error) {
+    console.error("Error al carregar o obtenir el text del PDF:", error);
+    throw new Error(
+      "No s'ha pogut extreure el text del PDF. Assegura't que el fitxer no està corrupte."
+    );
+  }
+  const tempExtracted = {};
+
+  // -------------------------------------------------------------------------
+  // 2. LÒGICA D'EXTRACCIÓ DELS CAMPS
+  // -------------------------------------------------------------------------
+
+  // a) Data de l'informe (Primer patró de data que es trobi)
+  const dateMatch = fullText.match(/(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/);
+  tempExtracted["Data informe"] = dateMatch ? dateMatch[1] : "N/D";
+
+  // b) Proveïdor
+  let foundProvider = "N/D";
+  for (const provider of KNOWN_PROVIDERS) {
+    if (fullText.toLowerCase().includes(provider.toLowerCase())) {
+      foundProvider = provider;
+      break;
+    }
+  }
+  // Cas especial per a "VALLÈS"
+  if (foundProvider === "N/D") {
+    const cityMatch = KNOWN_CITIES.find((city) =>
+      fullText.toUpperCase().includes(city)
+    );
+    if (cityMatch === "VALLÈS") {
+      foundProvider = "PROVEÏDOR AMB ADREÇA VALLÈS (Revisar Manualment)";
+    }
+  }
+  tempExtracted["Proveïdor"] = foundProvider;
+
+ // c) Tècnic
+  let foundTecnic = "N/D";
+  for (const tecnic of KNOWN_TECNICS) {
+    if (fullText.toLowerCase().includes(tecnic.toLowerCase())) {
+      foundTecnic = tecnic;
+      break;
+    }
+  }
+  tempExtracted["Tècnic"] = foundTecnic;
+
+  // d) Títol de l'informe (Nom del fitxer sense extensió)
+  tempExtracted["Titol de l'informe"] =
+    file.name.replace(/\.[^/.]+$/, "") || "Informe de Factura";
+
+  // e) Número Mod A (Robust)
+  let numModA = "N/D";
+  // 1. Cerca del patró aïllat
+  const isolatedModAMatch = fullText.match(/\b([A-D]\d{3})\b/i);
+// Si es troba el patró aïllat, l'utilitzem directament
+  if (isolatedModAMatch) {
+    numModA = isolatedModAMatch[1].trim().toUpperCase(); 
+  } else {
+    // 2. Cerca del patró amb prefix "Num Mod A"
+    const prefixedModAMatch = fullText.match(
+      /num(?:ero)?\s+mod\s+A[^a-z0-9]*?([A-D]\d{3})/i
+    );
+    if (prefixedModAMatch) {
+      numModA = prefixedModAMatch[1].trim().toUpperCase();
+    }
+  }
+  tempExtracted["Número Mod A"] = numModA;
+
+  // f) Total € (sense IVA) (Robust)
+  let totalSenseIVA = "N/D";
+  const senseIVAMatch = fullText.match(
+    new RegExp(
+      "total € \\(sense IVA\\)" + "[^a-z0-9€]*?" + PRICE_SIMPLE_PATTERN.source,
+      "i"
+    )
+  );
+  if (senseIVAMatch && senseIVAMatch[1]) {
+    totalSenseIVA = senseIVAMatch[1].trim();
+  }
+  tempExtracted["Total € (sense IVA)"] = normalizePrice(totalSenseIVA);
+
+  // g) Total € (IVA inclòs) (Robust)
+  let totalAmbIVA = "N/D";
+  const ambIVAMatch = fullText.match(
+    new RegExp(
+      "total € \\(IVA incl[oó]s\\)" +
+        "[^a-z0-9€]*?" +
+        PRICE_SIMPLE_PATTERN.source,
+      "i"
+    )
+  );
+
+  if (ambIVAMatch && ambIVAMatch[1]) {
+    totalAmbIVA = ambIVAMatch[1].trim();
+  }
+  tempExtracted["Total € (IVA inclòs)"] = normalizePrice(totalAmbIVA);
+
+  // --------------------------------------------------------------------------
+  /// 3. PREPARACIÓ DE LES DADES PER A LA TAULA DINÀMICA
+  // --------------------------------------------------------------------------
+
+  // Definim l'ordre final dels camps
+  const orderedKeys = [
+    "Titol de l'informe",
+    "Data informe",
+    "Tècnic",
+    "Número Mod A",
+    "Proveïdor",
+    "Total € (sense IVA)",
+    "Total € (IVA inclòs)",
+  ];
+
+  const finalRows = orderedKeys.map((key) => [
+    key,
+    tempExtracted[key] || "N/D",
+  ]);
+
+  return {
+    headers: ["Camp", "Valor"],
+    rows: finalRows,
+  };
+}

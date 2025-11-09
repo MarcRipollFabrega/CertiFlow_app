@@ -1,0 +1,177 @@
+/***************************************************************************************
+ * Estils CSS per a la pàgina d'enviament i extracció de dades de PDF
+ ***************************************************************************************/   
+
+/* ========================================================================= */
+/* 1. VARIABLES CSS PERSONALITZADES */  
+/* ========================================================================= */
+/* Colors específics per a aquesta pàgina */
+.enviar-wrapper {
+    display: flex;
+    gap: 20px;
+    height: 100%; 
+    box-sizing: border-box;
+}
+/* ---------------------- COLUMNES DE SERVEI (ESQUERRA I DRETA) ---------------------- */
+/* Contenidor de cada columna */
+.service-column {
+    flex: 1; 
+    min-width: 300px;
+    background-color: var(--color-background-white); 
+    padding: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    display: flex; 
+    flex-direction: column; 
+}
+
+/* ---------------------- COLUMNA D'EXTRACCIÓ DE DADES (ESQUERRA) ---------------------- */
+/* Títol de la columna */
+.service-column h3 {
+    margin-top: 0; 
+    margin-bottom: 10px;
+    color: var(--color-heading-text);
+    flex-shrink: 0; 
+}
+/* Panell de dades extretes */
+.data-panel {
+     flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+}
+
+/* Contenidor de la taula amb scroll */
+#outputTableContainer {
+    flex-grow: 1; 
+    overflow-y: auto; 
+    margin-bottom: 15px;
+    padding-right: 5px; 
+}
+
+/* Estils de la taula */
+#outputTableContainer table {
+    width: 100%;
+    border-collapse: collapse;
+}
+/* Estils de les cel·les */
+#outputTableContainer th,
+#outputTableContainer td {
+    padding: 8px 12px;
+    border: 1px solid var(--color-input-border);
+    text-align: left;
+    font-size: 1.4rem;
+}
+/* Estils dels encapçalaments de la taula */
+#outputTableContainer th {
+    background-color: var(--color-background-light);
+    color: var(--color-text-dark);
+    font-weight: 700;
+}
+
+/* Contenidor dels controls (botons i drop zone) */
+.controls-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; 
+    padding-top: 10px;
+    border-top: 1px solid var(--color-input-border);
+    flex-shrink: 0;
+}
+
+/* Botons d'acció */
+.action-button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.6rem;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+/* ---------------------- Estil Primari (Enviar Dades) ---------------------- */
+.primary-action-button {
+    background-color: var(--color-button-primary); 
+    color: var(--color-input-text); 
+}
+/* Canvi de color en hover */
+.primary-action-button:hover:not(:disabled) {
+    background-color: var(--color-button-primary-hover);
+}
+/* Estil per a botons desactivats */
+.primary-action-button:disabled {
+    background-color: var(--color-button-disabled);
+    cursor: not-allowed;
+}
+/* ---------------------- Estil Secundari (Carregar Document) ---------------------- */
+.secondary-action-button {
+    background-color: var(--color-button-primary); 
+    color: var(--color-input-text); 
+    border: 1px solid var(--color-input-border); 
+}
+/* Canvi de color en hover */
+.secondary-action-button:hover:not(:disabled) {
+    background-color: var(--color-button-primary-hover); 
+}
+/* Estil per a botons desactivats */
+.primary-action-button:disabled,
+.secondary-action-button:disabled {
+    background-color: var(--color-button-disabled); 
+    color: var(--color-text-on-accent);
+    cursor: not-allowed;
+}
+
+/* ---------------------- DROP ZONE PER ARROSSEGAR I DEIXAR ANAR ---------------------- */
+#drop-zone-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px; 
+    width: 100%; 
+    padding: 5px 10px;
+    background-color: var(--color-background-light);
+    border: 2px dashed var(--color-accent);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+    font-size: 1.4rem;
+    color: var(--color-accent);
+    margin-top: 5px;
+}
+/* Estil del text dins la drop zone */
+#drop-zone-small p {
+    margin: 0;
+    text-align: center;
+}
+/* Estil quan s'arrossega un fitxer per sobre */
+.drag-over {
+    background-color: var(--color-accent-light) !important; 
+    border-color: var(--color-accent-hover) !important; 
+    color: var(--color-accent-hover) !important;
+}
+
+/* ---------------------- VISOR PDF (DRETA) ---------------------- */
+/* Contenidor del visor PDF */
+#pdf_viewer {
+    flex-grow: 1; 
+    overflow: auto; 
+    border: 1px solid var(--color-input-border);
+    border-radius: 4px;
+    background-color: #eee;
+}
+/* Estil de l'iframe dins el visor PDF */
+#pdf_viewer iframe {
+    width: 100%;
+    height: 100%; 
+    border: none;
+}
+/* Estil per al missatge quan no hi ha PDF carregat */
+.pdf-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text-placeholder);
+    font-size: 1.8rem;
+    text-align: center;
+}

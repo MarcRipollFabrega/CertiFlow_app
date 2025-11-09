@@ -1,0 +1,174 @@
+/**************************************************************************/
+/****************************************** RESET **************************/
+/***************************************************************************/
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 62.5%;
+  line-height: 1.15;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ========================================================================= */
+/* 1. PALETA DE COLORS I VARIABLES GLOBALS */
+/* ========================================================================= */
+
+:root {
+  /* MODE FOSC (Base) */
+  --color-background: #37353e;
+  --color-surface: #44444e; /* Per a menús, targetes, etc. */
+  --color-text-primary: #d3dad9; /* Text clar */
+  --color-text-secondary: #715a5a;
+  --color-accent: #039734; /* Verd principal */
+  --shadow-dark: rgba(0, 0, 0, 0.4);
+
+  /* INPUTS I BOTONS */
+  --color-input-background: #3a4750;
+  --color-input-text: white;
+  --color-input-border: #555;
+  --color-button-primary: var(--color-accent);
+  --color-button-primary-hover: #027a29;
+  --color-text-on-accent: white;
+  --color-edit: #ffeb3b;
+  --color-edit-hover: #fbc02d;
+
+  /* NOVES VARIABLES PER AL BOTÓ SECUNDARI I ESTAT */
+  --color-button-secondary-bg: var(--color-surface); /* Fons base per al secundari */
+  --color-button-secondary-hover: #55555e; /* Fons hover (una mica més clar) */
+  --color-button-secondary-text: var(--color-text-primary); /* Text clar per al secundari */
+  --color-button-disabled: #555555; /* Fons per a botons desactivats */
+  
+  /* ESTATS */
+  --color-error: #e53e3e;
+  --color-success: var(--color-accent);
+
+  /* ROLES */
+  --color-role-compres: #039734;
+  --color-role-juridic: #3498db;
+  --color-role-tecnic: #f39c12;
+  --color-role-gerent: #4a90e2;
+  --color-role-cap-de-seccio: #ffb74d;
+}
+
+/* MODE CLAR */
+body.light-mode {
+  --color-background: #f4f4f9;
+  --color-surface: #ffffff;
+  --color-text-primary: #37353e; /* Text fosc */
+  --color-text-secondary: #7f8c8d;
+  --color-accent: #039734;
+  --shadow-dark: rgba(0, 0, 0, 0.1);
+
+  --color-input-background: #ecf0f1;
+  --color-input-text: #37353e;
+  --color-input-border: #bdc3c7;
+
+  /* SOBREESCRIPCIÓ PER AL BOTÓ SECUNDARI */
+  --color-button-secondary-bg: var(--color-input-background); /* Gris clar */
+  --color-button-secondary-hover: #d0d3d4; /* Gris més fosc */
+  --color-button-secondary-text: var(--color-text-primary); /* Text fosc */
+  --color-button-disabled: #bdc3c7; /* Fons per a botons desactivats */
+}
+
+/* ========================================================================= */
+/* 2. KEYFRAMES D'ANIMACIÓ */
+/* ========================================================================= */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================================================= */
+/* 3. ESTILS GLOBALS (BODY, TIPOGRAFIA) */
+/* ========================================================================= */
+
+body {
+  font-size: 1.6rem;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  height: 100%;
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-image: url("../img/fons.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s, color 0.3s;
+  line-height: 1.6;
+  overflow-y: hidden;
+}
+
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Estils dels RoLs (Badges) */
+.role-badge,
+.role-compres,
+.role-juridic,
+.role-tecnic, .role-gerent, .role-cap-de-seccio {
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+}
+.role-compres {
+  background-color: var(--color-role-compres);
+  color: white;
+}
+.role-juridic {
+  background-color: var(--color-role-juridic);
+  color: white;
+}
+.role-tecnic {
+  background-color: var(--color-role-tecnic);
+  color: white;
+}
+.role-gerent {
+  background-color: var(--color-role-gerent);
+  color: white;
+}
+.role-cap-de-seccio {
+  background-color: var(--color-role-cap-de-seccio);
+  color: white;
+}

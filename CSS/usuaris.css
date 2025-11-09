@@ -1,0 +1,399 @@
+/* ========================================================================= */
+/* 1. ESTRUCTURA BÀSICA DE L'ADMINISTRACIÓ */
+/* ========================================================================= */
+/* Contenidor principal de l'àrea d'administració */
+.admin-grid-layout {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr; 
+    grid-template-rows: 1fr; 
+    gap: 20px; 
+    min-height: 0; 
+}
+/* Contenidors dels quadrants */
+.admin-quadrant {
+    background-color: var(--color-surface); 
+    border-radius: 8px;
+    padding: 15px; 
+    box-shadow: 0 4px 8px var(--shadow-dark);
+    overflow: auto; /* Scroll intern si el contingut és massa llarg */
+    display: flex; 
+    flex-direction: column; 
+}
+/* Quadrant 1: Formulari d'Alta d'Usuaris */
+.admin-quadrant-1 {
+    display: flex; 
+    flex-direction: column; 
+}
+/* ========================================================================= */
+/* 2. ESTILS DEL FORMULARI D'ALTA D'USUARIS */
+/* ========================================================================= */
+/* Títol del formulari d'Alta d'Usuaris */
+.crud-title {
+    color: var(--color-accent);
+    border-bottom: 1px solid var(--color-input-border);
+    padding-bottom: 5px; 
+    margin-bottom: 10px; 
+    font-size: 1.5rem;
+    margin-top: 15px;
+    position: relative;
+    z-index: 5;
+}
+/* Formulari d'Alta d'Usuaris */
+#altaUsuariForm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; 
+    flex-grow: 1;
+}
+/* Grups d'inputs (Nom, Email, Rol, Departament) */
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+/* Etiquetes dels camps del formulari */
+.input-group label {
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+}
+/* Camps d'entrada i selecció */
+.input-group input,
+.input-group select {
+    padding: 10px;
+    border: 1px solid var(--color-input-border);
+    border-radius: 4px;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%; 
+    box-sizing: border-box;
+}
+/* Efecte de focus per als camps del formulari */
+.input-group input:focus,
+.input-group select:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-shadow);
+    outline: none;
+}
+/* Botó d'Alta d'Usuari */
+#altaUsuariButton {
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s, opacity 0.2s, transform 0.1s;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none; 
+    background-color: var(--color-accent); 
+    color: white;
+    margin-top: auto; 
+    width: 100%; 
+}
+/* Efecte d'hover per al botó d'Alta d'Usuari */
+#altaUsuariButton:hover {
+    background-color: var(--color-button-primary-hover);
+    transform: translateY(-1px);
+}
+/* Estil per al botó d'Alta d'Usuari deshabilitat */
+#altaUsuariButton:disabled {
+    background-color: var(--color-input-border);
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+}
+/* ========================================================================= */
+/* 3. LLISTA D'USUARIS */
+/* ========================================================================= */
+/* Contenidor de la llista d'usuaris */
+.llista-usuaris-container {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+}
+
+/* Títol de la llista d'usuaris */
+#llistaUsuarisContent.table-responsive {
+    flex-grow: 1;
+    overflow-x: auto; 
+    margin-top: 15px;
+    margin-bottom: 10px;
+    max-height: 230px;
+    overflow-y: auto;
+    flex-grow: 1; 
+    margin-bottom: 15px;
+}
+
+/* Taula d'usuaris */
+.admin-table {
+    width: 100%; 
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    table-layout: fixed; 
+    min-width: 700px; 
+}
+
+/* CAPÇALERA DE LA TAULA (THEAD) */
+.admin-table thead th {
+    background-color: var(--color-background-soft);
+    color: var(--color-accent);
+    padding: 10px 15px;
+    text-align: left;
+    border-bottom: 2px solid var(--color-input-border);
+    white-space: nowrap; 
+}
+/* Ample específic per a cada columna */
+.admin-table thead th:nth-child(1) {
+    width: 10%; 
+    text-align: left;
+}
+/* 2. Nom d'Usuari */
+.admin-table thead th:nth-child(2) {
+    width: 35%; 
+    text-align: left;
+}
+/* 3. Rol */
+.admin-table thead th:nth-child(3) {
+    text-align: center;
+    width: 15%; 
+}
+/* 4. Departament */
+.admin-table thead th:nth-child(4) {
+    text-align: center;
+    width: 15%; 
+}
+/* 5. Accions */
+.admin-table thead th:nth-child(5) {
+    width: 25%; 
+    text-align: center; 
+}
+/* COS DE LA TAULA (TBODY) */
+.admin-table tbody td {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--color-input-border-light, #eee);
+    color: var(--color-text-primary);
+    vertical-align: middle;
+    text-align: left;
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap;
+}
+/* Alineació específica per a cada columna del cos */
+.admin-table tbody tr td:nth-child(5) {
+    text-align: center;
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+}
+/* Efecte d'hover per a les files de la taula */
+.admin-table tbody tr:hover {
+    background-color: var(--color-background-hover);
+}
+/* Cel·la d'accions */
+.action-cell {
+    text-align: center;
+    padding: 3px 5px; 
+}
+/* Alineació específica per a la columna d'accions */
+.action-table td:nth-child(5) {
+    display: flex;
+    gap: 5px; 
+    justify-content: center;
+    align-items: center;
+}
+/* Botons d'acció (Editar, Eliminar) */
+.action-btn {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    margin: 2px; 
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    font-weight: 500;
+}
+/* Botó EDICIÓ */
+.action-cell .action-btn {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    margin: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    font-weight: 500;
+}
+/* Botó EDITAR */
+.action-btn.edit-btn {
+    background-color: var(--color-edit); 
+    color: #1a1a1a;
+    border: 1px solid var(--color-edit);
+}
+/* Efecte d'hover per al botó EDITAR */
+.action-btn.edit-btn:hover {
+    background-color: var(--color-edit-hover);
+    transform: translateY(-1px);
+}
+/* Botó ELIMINAR */
+.action-btn.delete-btn {
+    background-color: var(--color-error); 
+    color: white;
+    border: 1px solid var(--color-error);
+}
+/* Efecte d'hover per al botó ELIMINAR */
+.action-btn.delete-btn:hover {
+    background-color: #d32f2f;
+}
+/* Estils per a les cel·les en mode edició */
+.admin-table .editable-cell input,
+.admin-table .editable-cell select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px;
+    border: 1px solid var(--color-input-border);
+    border-radius: 4px;
+    background-color: var(--color-surface-light);
+    color: var(--color-text-primary);
+}
+/* Estils per a la fila en edició */
+table tr.editing td:last-child {
+    display: flex;
+    flex-direction: column; 
+    gap: 4px; 
+    align-items: center;
+    padding: 5px; 
+}
+/* Botons de Guardar i Cancel·lar dins de la fila en edició */
+.action-btn.save-btn,
+.action-btn.cancel-btn {
+    width: 95%; 
+    padding: 7px 10px;
+    font-size: 0.9rem;
+    margin: 0; 
+}
+/* Estils específics per als botons Guardar i Cancel·lar */
+.action-btn.save-btn {
+    background-color: var(--color-success, #4CAF50); 
+    color: white;
+    border: none;
+}
+/* Estils específics per als botons Guardar i Cancel·lar */
+.action-btn.cancel-btn {
+    background-color: var(--color-input-border); 
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-text-primary);
+}
+/* Efecte d'hover per al botó GUARDAR */
+.action-btn.save-btn:hover {
+    background-color: #3e8e41;
+}
+/* Efecte d'hover per al botó CANCEL·LAR */
+.action-btn.cancel-btn:hover {
+    background-color: var(--color-background-hover);
+}
+/* Estil de la Capçalera (Tercera Columna) */
+.admin-table thead th:nth-child(3) {
+    text-align: center; /* Centrem el títol 'Rol' */
+}
+/* Estil de la Capçalera (Quarta Columna) */
+.admin-table .role-cell {
+    text-align: center; 
+    padding: 10px 15px; 
+}
+/* Estil de l'etiqueta (el badge) dins de la cel·la */
+.admin-table .role-badge { 
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 70px; 
+}
+
+/* ================================================= */
+/* ESTILS ESPECÍFICS PER A CADA ROL D'USUARI */
+/* ================================================= */
+
+/* 🟦 ROL: Gerent */
+.admin-table .rol-gerent .role-badge { 
+    background-color: var(--color-accent-light, #c0e0ff);
+    color: var(--color-accent-dark, #0056b3);
+}
+
+/* 🟥 ROL: Cap de secció Tècnic */
+.admin-table .rol-cap-de-seccio .role-badge {
+    background-color: #ffe0b2; 
+    color: #e65100;           
+}
+
+/* 🟩 ROL: Compres */
+.admin-table .rol-compres .role-badge { 
+    background-color: var(--color-success-light, #e6ffe6);
+    color: var(--color-success-dark, #388e3c);
+}
+
+/* 🟪 ROL: Jurídic */
+.admin-table .rol-juridic .role-badge {
+    background-color: #e1bee7; 
+    color: #6a1b9a;           
+}
+/* ⚙️ NOU: ROL Tècnic (Sanejada a 'tecnic') */
+.admin-table .rol-tecnic .role-badge {
+    background-color: #d1e7dd; 
+    color: #08665b;           
+}
+
+/* ================================================= */
+/* ESTILS ESPECÍFICS PER A CADA DEPARTAMENT D'USUARI */
+/* ================================================= */
+/* Estil de la Capçalera (Quarta Columna) */
+.admin-table .dpt-badge { 
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 70px;
+}
+
+/* 🟢 DEP: Ocupació */
+.admin-table .dpt-ocupacio .dpt-badge { 
+    background-color: #e8f5e9; 
+    color: #388e3c;           
+}
+
+/* 🟡 DEP: Intermediació */
+.admin-table .dpt-intermediacio .dpt-badge { 
+    background-color: #fffde7; 
+    color: #fbc02d;           
+}
+
+/* 📚 DEP: Formació */
+.admin-table .dpt-formacio .dpt-badge { 
+    background-color: #e3f2fd; 
+    color: #1976d2;           
+}
+
+/* 🚀 DEP: Dinamització Empresarial */
+.admin-table .dpt-dinamitzacio-empresarial .dpt-badge { 
+    background-color: #fbe9e7; 
+    color: #e64a19;           
+}
+
+/* 📑 DEP: Gestió de recursos */
+.admin-table .dpt-gestio-de-recursos .dpt-badge { 
+    background-color: #fbe9e7; 
+    color: #8e24aa;           
+}
+
+/* 👑 DEP: Gerència */
+.admin-table .dpt-gerencia .dpt-badge { 
+    background-color: #eceff1; 
+    color: #455a64;           
+}

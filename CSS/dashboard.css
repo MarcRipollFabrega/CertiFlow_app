@@ -1,0 +1,346 @@
+/*========================================================================= */
+/* 1. ESTRUCTURA DE LA APLICACIÓ */    
+/* ========================================================================= */     
+/* Disposició de la graella per a l'aplicació completa */
+.app-layout {
+    display: grid;
+    grid-template-areas: 
+        "header header"
+        "nav main"
+        "nav footer";
+    /* La capçalera i el peu tenen una alçada fixa */
+    grid-template-rows: 60px 1fr 50px; 
+    /* La navegació inicialment té 0px, es canviarà amb el menú.js */
+    grid-template-columns: 0 1fr; 
+    min-height: 100vh;
+    width: 100%;
+    background-color: var(--color-background); 
+    color: var(--color-text-primary);
+    transition: grid-template-columns 0.3s ease; 
+}
+/* Àrea de contingut principal */
+.main-content-area {
+    grid-area: main;
+    overflow-y: auto; 
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex; 
+    flex-direction: column;
+}
+/* Contingut intern de l'aplicació */
+#main-app-content {
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 100%; 
+}
+/* Columna de serveis (general) */
+.service-column {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Columna amb divisió vertical (per a formularis i visualitzador) */
+.service-column.vertical-split {
+    display: flex;
+    flex-direction: column; 
+    flex-grow: 1; 
+    justify-content: space-between;
+}
+
+/* ========================================================================= */
+/* 2. CAPÇALERA (HEADER) */
+/* ========================================================================= */
+/* 2.1 BARRA SUPERIOR AMB LOGO I BOTÓ DE MENÚ */
+.top-app-bar { 
+    grid-area: header; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    background-color: var(--color-surface); 
+    box-shadow: 0 2px 4px var(--shadow-dark);
+    z-index: 10;
+}
+/* Contenidor del logo */
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+/* Estil del text del logo */
+.app-logo {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-left: 10px;
+}
+/* Estil de la icona del logo */
+.logo-icon {
+    width: 30px; 
+    height: 30px; 
+}
+/* Color accentuat per a parts del logo */
+.logo-accent {
+    color: var(--color-accent);
+}
+/* Estil del botó de menú */
+.menu-toggle-button {
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    margin-right: 15px;
+    transition: color 0.3s;
+}
+/* Efecte d'hover per al botó de menú */
+.menu-toggle-button:hover {
+    color: var(--color-accent);
+}
+/* Estil del toggle switch (per a mode fosc/claro) */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 25px;
+}
+/* Estil del control lliscant */
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+/* Estil del slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+}
+/* Estil del cercle dins del slider */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 17px;
+    width: 17px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+}
+/* Estil quan el toggle està activat */
+input:checked + .slider {
+    background-color: var(--color-accent);
+}
+/* Posició del cercle quan està activat */
+input:checked + .slider:before {
+    transform: translateX(25px);
+}
+/* Estil rodó per al slider i el cercle */
+.slider.round {
+    border-radius: 25px;
+}
+/* Estil rodó per al cercle dins del slider */
+.slider.round:before {
+    border-radius: 50%;
+}
+/* ========================================================================= */
+/* 3. PEU DE PÀGINA (FOOTER) */
+/* ========================================================================= */
+/* Barra inferior del peu de pàgina */
+.bottom-app-bar { 
+    grid-area: footer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0 20px;
+    background-color: var(--color-surface); 
+    box-shadow: 0 -2px 4px var(--shadow-dark);
+    z-index: 10; 
+}
+
+/* Contenidor de la informació de l'usuari al peu */
+.footer-user-info {
+    font-size: 1.2rem;
+    color: var(--color-text-secondary);
+}
+/* ========================================================================= */
+/* 4. MENÚ DE NAVEGACIÓ (NAVBAR) */
+/* ========================================================================= */
+/* Contenidor del menú de navegació */
+.footer-menu-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1; 
+}
+/* Estil de la llista del menú de navegació */
+.navbar-menu {
+    display: flex; 
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    gap: 20px; 
+}
+/* Estil de cada opció del menú */
+.navbar-menu .list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+/* Estil dels enllaços dins de cada opció del menú */
+.navbar-menu a {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: var(--color-text-secondary); 
+    transition: color 0.3s, background-color 0.3s, transform 0.3s ease-out;
+}
+/* Estil de la icona dins de cada opció del menú */
+.navbar-menu .icon {
+    font-size: 2.2rem;
+    line-height: 1; 
+    margin-bottom: 2px;
+    transition: transform 0.3s ease-out;
+}
+/* Estil del text dins de cada opció del menú */
+.navbar-menu .text {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+/*------------------------------------------------------------------------- */
+/* Estil de l'opció ACTIVA del menú */
+/*------------------------------------------------------------------------- */
+.navbar-menu .list.active a {
+    color: var(--color-accent); 
+    transform: scale(1.1); 
+}
+/* Estil del fons de l'opció ACTIVA del menú */
+.navbar-menu .list.active .icon {
+    transform: translateY(-5px); 
+}
+/*------------------------------------------------------------------------- */
+/* Efectes d'hover per a les opcions del menú */                                
+.navbar-menu .list:hover a {
+    color: var(--color-accent-light);
+    transform: scale(1.1); 
+}
+/* Efecte d'hover per a la icona dins de les opcions del menú */
+.navbar-menu .list:hover .icon {
+    transform: translateY(-5px); 
+}
+/* ========================================================================= */
+/* 5. DASHBOARD WRAPPER */
+/* ========================================================================= */
+/* Contenidor principal del dashboard */
+.dashboard-wrapper {
+    flex-grow: 1; 
+    display: flex; 
+    width: 100%;
+    min-height: 100%; 
+    gap: 30px; 
+}
+/* Estil dels títols de secció dins del dashboard */
+.section-title {
+    color: var(--color-accent);
+    margin-bottom: 20px;
+    font-size: 2rem;
+    padding-bottom: 5px;
+    border-bottom: 2px solid var(--color-input-border);
+}
+
+/* ========================================================================= */
+/* 6. FORMULARIS I INPUTS */
+/* ========================================================================= */
+/* Estil general dels camps de formulari */
+.info-message, .error-message {
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+/* Estil específic per a missatges d'informació */
+.info-message {
+    background-color: #3498db30;
+    color: #3498db;
+    border: 1px solid #3498db;
+}
+/* Estil específic per a missatges d'error */
+.error-message {
+    background-color: #e53e3e30;
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
+}
+/* ========================================================================= */
+/* Spinner de càrrega */    
+.loading-spinner {
+    border: 4px solid var(--color-input-border);
+    border-top: 4px solid var(--color-accent);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 50px auto;
+}
+
+/* ========================================================================= */
+/* 7. BOTÓ DE TANCAR SESSIÓ */
+/* ========================================================================= */
+/* Estil del botó de tancar sessió */
+.logout-button {
+    background-color: var(--color-error);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+/* Efecte d'hover per al botó de tancar sessió */
+.logout-button:hover {
+    background-color: #c53030; 
+}
+/* ========================================================================= */
+/* 8. CONTENIDOR DE TOASTS DE NOTIFICACIÓ */
+/* ========================================================================= */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+/* ========================================================================= */
+/* 9. TOASTS DE NOTIFICACIÓ */
+.toast {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-dark);
+    margin-bottom: 10px;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+/* Estil per a toasts d'èxit */
+.toast-success {
+    border-left: 5px solid var(--color-success);
+}
+/* Estil per a toasts d'error */
+.toast-error {
+    border-left: 5px solid var(--color-error);
+}
+/* ========================================================================= */
+/* 10. CLASSE PER OCULTAR ELEMENTS */
+/* ========================================================================= */
+.visually-hidden {
+    display: none !important; 
+}
