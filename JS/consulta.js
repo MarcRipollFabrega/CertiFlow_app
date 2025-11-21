@@ -7,18 +7,14 @@ const BUCKET_NAME = "documents";
 // La URL base per a l'accés públic al Storage:
 const PUBLIC_URL_BASE = `${supabase.storage.url}/object/public/${BUCKET_NAME}/`;
 
-let lastPublicUrl = null; // Canviat de lastSignedUrl a lastPublicUrl
+let lastPublicUrl = null; // Variable global
 
 // =========================================================================
 // 1. FUNCIÓ PRINCIPAL EXPORTADA
 // =========================================================================
 export function createConsultarComponent() {
   const wrapper = document.createElement("div");
-  wrapper.classList.add(
-    "service-wrapper",
-    "consultar-wrapper"
-    // ELIMINADA: "enviar-wrapper" per solucionar el problema de disseny del títol.
-  );
+  wrapper.classList.add("service-wrapper", "consultar-wrapper");
 
   wrapper.innerHTML = `
     <h2 class="crud-title">🔍 Consulta de Documents</h2>
@@ -26,6 +22,12 @@ export function createConsultarComponent() {
     <div class="split-view">
         <div class="service-column table-column">
             <h3>Registres de Documents</h3> 
+            <input 
+                type="text" 
+                id="documentSearchInput" 
+                placeholder="🔍 Cerca per Títol, Proveïdor o Tècnic..."
+                class="search-input"
+            >
             <div id="consultarTableContainer" class="table-container">
                 <p>Carregant dades...</p>
             </div>
@@ -47,12 +49,23 @@ export function createConsultarComponent() {
 // =========================================================================
 
 /**
- * Obté les dades de la BBDD i renderitza la taula.
+ * Obté les dades de la BBDD i renderitza la taula, incloent la traça.
  */
 async function fetchAndDisplayDocuments(wrapper) {
+  // 💡 CANVI: AFEGIM document_traza al SELECT per carregar les dades relacionades
   const { data: documents, error } = await supabase
     .from("documents")
-    .select("id, file_path, estat_document, data_extreta, estat_aprovacio");
+    .select(
+      `
+        id, 
+        file_path, 
+        estat_document, 
+        data_extreta, 
+        estat_aprovacio,
+        document_traza ( timestamp, accio, comentaris, user_id ) 
+      `
+    )
+    .order("created_at", { ascending: false }); // Ordenem per data de creació
 
   const tableContainer = wrapper.querySelector("#consultarTableContainer");
   tableContainer.innerHTML = "";
@@ -88,6 +101,7 @@ function createTableElement(data) {
       <tr>
         <th>Títol</th>
         <th>Data</th>
+        <th>Técnic</th>
         <th>Mod A</th>
         <th>Proveïdor</th>
         <th>Estat Document</th>
@@ -101,21 +115,19 @@ function createTableElement(data) {
           // Extracció de dades (camps de taula)
           const titol = dataExtreta.titol_de_linforme || "N/A";
           const dataInforme = dataExtreta.data_informe || "N/A";
+          const tecnic = dataExtreta.tecnic || "N/A";
           const numModA = dataExtreta.numero_mod_a || "N/A";
           const proveidor = dataExtreta.proveidor || "N/A";
-
-          // Guardem totes les dades necessàries a un data-full-doc
-          const fullDataString = JSON.stringify({
-            ...doc,
-            data_extreta: dataExtreta,
-          });
+          const fullDataString = JSON.stringify(doc);
+          const encodedData = encodeURIComponent(fullDataString);
 
           return `
           <tr 
-            data-full-doc='${fullDataString}'
+            data-full-doc='${encodedData}'
           >
             <td>${titol}</td>
             <td>${dataInforme}</td>
+            <td>${tecnic}</td>
             <td>${numModA}</td>
             <td>${proveidor}</td>
             <td><span class="status ${doc.estat_document.toLowerCase()}">${
@@ -133,78 +145,107 @@ function createTableElement(data) {
 // =========================================================================
 // 4. LÓGICA DE DETALLS I BOTONS (Nou panell de la dreta)
 // =========================================================================
+function clearSelectionAndPanel(wrapper) {
+  const tableContainer = wrapper.querySelector("#consultarTableContainer");
+  const table = tableContainer.querySelector(".crud-table");
+  const detailsArea = wrapper.querySelector("#document_details_area");
+  const tableColumn = wrapper.querySelector(".table-column");
+  const pdfViewerColumn = wrapper.querySelector(".pdf-viewer-column");
+
+  // Desselecciona totes les files
+  if (table) {
+    table
+      .querySelectorAll("tbody tr.selected")
+      .forEach((r) => r.classList.remove("selected"));
+  }
+
+  // Amaga el panell de detalls
+  pdfViewerColumn.classList.remove("visible");
+  tableColumn.classList.remove("contracted");
+
+  // Restaura el text placeholder
+  detailsArea.innerHTML =
+    '<div class="pdf-placeholder-text">Seleccioneu un document per veure les dades i accions disponibles.</div>';
+  detailsArea.classList.add("pdf-placeholder");
+}
+
 
 /**
  * Afegeix els listeners de clic a les files de la taula.
  */
 function loadTableListeners(wrapper) {
-  const tableContainer = wrapper.querySelector("#consultarTableContainer");
-  const table = tableContainer.querySelector(".crud-table");
+    const tableContainer = wrapper.querySelector("#consultarTableContainer");
+    const table = tableContainer.querySelector(".crud-table");
 
-  if (table) {
-    table.querySelectorAll("tbody tr").forEach((row) => {
-      row.addEventListener("click", () => {
-        // 1. Desselecciona files anteriors
-        table
-          .querySelectorAll("tbody tr.selected")
-          .forEach((r) => r.classList.remove("selected"));
+    // 💡 1. LISTENER DE CLIC FORA (Nou)
+    if (tableContainer) {
+        tableContainer.addEventListener("click", (event) => {
+            // Comprova si el clic no ha estat sobre una fila (<tr>)
+            if (!event.target.closest("tbody tr")) {
+                clearSelectionAndPanel(wrapper);
+            }
+        });
+    }
 
-        // 2. Selecciona la fila actual
-        row.classList.add("selected");
+    if (table) {
+        table.querySelectorAll("tbody tr").forEach((row) => {
+            row.addEventListener("click", (event) => {
+                // 🛑 Important: Aturem la propagació del clic des de la fila
+                // Això evita que el listener del 'tableContainer' de dalt s'activi
+                event.stopPropagation(); 
+                
+                // 2. Extreu les dades i el path del document
+                const encodedData = row.dataset.fullDoc;
+                const fullDocumentData = JSON.parse(decodeURIComponent(encodedData));
+                const filePath = fullDocumentData.file_path;
 
-        // 3. Extreu les dades completes
-        const fullDocumentData = JSON.parse(row.dataset.fullDoc);
-        const filePath = fullDocumentData.file_path;
+                // 3. Referències als elements (Ja existeixen)
+                const detailsArea = wrapper.querySelector("#document_details_area");
+                const tableColumn = wrapper.querySelector(".table-column");
+                const pdfViewerColumn = wrapper.querySelector(".pdf-viewer-column");
 
-        // 4. Renderitza el panell de detalls
-        const detailsArea = wrapper.querySelector("#document_details_area");
-        detailsArea.innerHTML = createDetailsAreaHtml(fullDocumentData);
-        detailsArea.classList.remove("pdf-placeholder");
+                // 4. GESTIÓ DEL TOGGLE (Obrir/Tancar Panell de Detalls)
+                if (row.classList.contains("selected")) {
+                    // Si ja està seleccionat, cridem a la funció de neteja
+                    clearSelectionAndPanel(wrapper);
+                    return; 
+                }
 
-        // 5. Obté l'URL PÚBLICA i renderitza els botons d'acció
-        getSignedUrlAndRender(filePath, detailsArea);
-      });
-    });
-  }
+                // 5. Si la fila NO estava seleccionada:
+                // Desselecciona qualsevol fila anterior i amaga el panell
+                clearSelectionAndPanel(wrapper); 
+                
+                // Selecciona la fila actual i mostra el panell
+                row.classList.add("selected");
+                pdfViewerColumn.classList.add("visible");   
+                tableColumn.classList.add("contracted");    
+                detailsArea.classList.remove("pdf-placeholder"); 
+
+                // 6. Renderitza el panell de detalls i l'enllaç
+                detailsArea.innerHTML = createDetailsAreaHtml(fullDocumentData);
+                getSignedUrlAndRender(filePath, detailsArea);
+            });
+        });
+    }
+
+    // 7. Activa el filtre de cerca (la lògica del cercador que ja tens)
+    const searchInput = wrapper.querySelector("#documentSearchInput");
+    if (searchInput) {
+        searchInput.addEventListener("keyup", (event) => {
+            filterTable(event.target.value);
+        });
+    }
 }
 
 /**
  * Genera el codi HTML per a l'àrea de detalls del document (Quadre Resum).
  */
 function createDetailsAreaHtml(documentData) {
-  const dataExtreta = documentData.data_extreta || {};
-
-  // Extracció i format de dades
-  const titol = dataExtreta.titol_de_linforme || "N/A";
-  const dataInforme = dataExtreta.data_informe || "N/A";
-  const tecnic = dataExtreta.tecnic || "N/A";
-  const numModA = dataExtreta.numero_mod_a || "N/A";
-  const proveidor = dataExtreta.proveidor || "N/A";
-
-  const totalSenseIva = parseFloat(dataExtreta.total_sense_iva || 0).toFixed(2);
-  const totalIvaInclos = parseFloat(dataExtreta.total_iva_inclos || 0).toFixed(
-    2
-  );
-  const estatAprovacio = documentData.estat_aprovacio || "N/A";
-
-  // Traça (assumim que el camp pot estar buit)
-  const trazaHtml = renderTraza(documentData.traza_document);
+  // 💡 CANVI: Utilitzem document_traza per generar l'HTML
+  const trazaHtml = renderTraza(documentData.document_traza);
 
   const detailsHtml = `
-    <div class="document-summary-box">
-         <div class="document-summary">
-            <p><strong>Títol de l'Informe:</strong> ${titol}</p>
-            <p><strong>Data de l'Informe:</strong> ${dataInforme}</p>
-            <p><strong>Tècnic:</strong> ${tecnic}</p>
-            <p><strong>Número Mod A:</strong> ${numModA}</p>
-            <p><strong>Proveïdor:</strong> ${proveidor}</p>
-            <p><strong>Total (Sense IVA):</strong> ${totalSenseIva} €</p>
-            <p><strong>Total (IVA Inclòs):</strong> ${totalIvaInclos} €</p>
-            <p><strong>Estat Aprovació:</strong> <span class="status ${estatAprovacio.toLowerCase()}">${estatAprovacio}</span></p>
-        </div>
-    </div>
-    
-    <div class="document-traza">
+    <div class="document-traza-container">
         <h4>Traçabilitat del Document</h4>
         <div class="document-traza"> ${trazaHtml}
         </div>
@@ -218,30 +259,81 @@ function createDetailsAreaHtml(documentData) {
 }
 
 /**
- * Renderitza la traça del document (implementació simple).
+ * Renderitza la traça del document.
  */
 function renderTraza(trazaData) {
   if (!trazaData || trazaData.length === 0) {
     return "<p>No hi ha traça de revisions disponible.</p>";
   }
-  // Aquesta implementació depèn de com estiguin les teves dades de traça
-  let html = "<ul>";
-  trazaData.forEach((pas) => {
-    // Exemple:
-    html += `<li>${pas.data || "N/A"} - ${pas.usuari || "N/A"}: ${
-      pas.acció || "N/A"
-    }</li>`;
+
+  // 1. Ordenar per timestamp (El més recent primer)
+  const sortedTraza = trazaData.sort(
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+  );
+
+  let html = "<ul class='traza-list'>";
+
+  sortedTraza.forEach((pas) => {
+    // 2. Format de la data
+    const dataFormatada = new Date(pas.timestamp).toLocaleDateString("ca-ES", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    html += `
+      <li>
+        <span class="traza-timestamp">[${dataFormatada}]</span> 
+        <span class="traza-action">${pas.accio || "N/A"}</span>: 
+        <span class="traza-comment">${
+          pas.comentaris || "Sense comentaris"
+        }</span>
+      </li>
+    `;
   });
+
   html += "</ul>";
   return html;
 }
+/**
+ * Filtra les files de la taula en funció del text introduït al cercador.
+ * @param {string} searchText - El text a buscar (no sensible a majúscules/minúscules).
+ */
+function filterTable(searchText) {
+    // Utilitzem querySelector per trobar la taula dins del contenidor
+    const table = document.querySelector("#consultarTableContainer .crud-table");
+    if (!table) return;
 
+    // Normalitzem el text de cerca a majúscules per a la comparació
+    const filter = searchText.toUpperCase();
+    const rows = table.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+        // 💡 ATENCIÓ A L'ORDRE ACTUAL DE LA TAULA (createTableElement):
+        // [0] Títol, [1] Data, [2] Tècnic, [3] Mod A, [4] Proveïdor, [5] Estat Document
+        
+        // 1. Extracció dels camps de cerca amb els índexs corregits:
+        const title = row.cells[0].textContent.toUpperCase();
+        const tecnic = row.cells[2].textContent.toUpperCase();    
+        const proveidor = row.cells[4].textContent.toUpperCase(); 
+
+        // 2. Lògica de Filtratge: Comprovem si el text de cerca es troba en qualsevol dels camps
+        if (title.includes(filter) || proveidor.includes(filter) || tecnic.includes(filter)) {
+            row.style.display = ""; // Mostra la fila
+        } else {
+            row.style.display = "none"; // Amaga la fila
+        }
+    });
+}
 // =========================================================================
-// 5. GESTIÓ D'ACCÉS AL PDF PÚBLIC (SOLUCIÓ FINAL)
+// 5. GESTIÓ D'ACCÉS AL PDF PÚBLIC (Simplificat)
 // =========================================================================
 /**
- * 💡 NOVA FUNCIÓ: Obté la URL signada de forma segura i la passa a renderActionButtons.
-* @param {string} filePath - El camí complet del fitxer al bucket (p.ex., "documents/arxiu.pdf").
+ * Obté directament l'URL pública del fitxer.
+ * 💡 Eliminat l'intent de createSignedUrl per evitar el 400 Bad Request
+ * @param {string} filePath - El camí complet del fitxer al bucket (p.ex., "documents/arxiu.pdf").
  * @param {HTMLElement} detailsArea - L'àrea on es renderitzen els botons.
  */
 async function getSignedUrlAndRender(filePath, detailsArea) {
@@ -255,14 +347,13 @@ async function getSignedUrlAndRender(filePath, detailsArea) {
     ? filePath.substring(BUCKET_NAME.length + 1)
     : filePath;
 
-  // 2. GENERAR DIRECTAMENT LA URL PÚBLICA (sense intentar la signada)
+  // 2. GENERAR DIRECTAMENT LA URL PÚBLICA
   const finalUrl = PUBLIC_URL_BASE + pathWithoutBucket;
 
-  // 3. Finalitzar la càrrega: CRIDA SEMPRE ALS BOTONS AMB LA FINALURL
+  // 3. Finalitzar la càrrega
   if (finalUrl) {
-    lastPublicUrl = finalUrl; 
+    lastPublicUrl = finalUrl;
     renderActionButtons(detailsArea, finalUrl);
-    // Elimina el missatge d'advertència si hi ha
     if (loadingStateDiv) loadingStateDiv.remove();
   } else {
     if (loadingStateDiv) {
@@ -278,41 +369,29 @@ function renderActionButtons(detailsArea, url) {
   const loadingState = detailsArea.querySelector(".loading-state");
   if (loadingState) loadingState.remove();
 
-  // 2. Afegeix l'HTML dels botons
+  // 2. Afegeix l'HTML només per al botó OBRIR PDF
   const controlsHtml = `
  <div class="controls-area">
             <h4>Accions</h4>
-            <div class="button-group">  <button id="openPdfButton" class="action-button primary-action-button">
-                    <span class="icon">📄</span> Obrir PDF
-                </button>
-                <button id="downloadPdfButton" class="action-button secondary-action-button">
-                    <span class="icon">⬇️</span> Descarregar
+            <div class="button-group">  
+                <button id="openPdfButton" class="action-button primary-action-button">
+                    <span class="icon">📄</span> Obrir Document
                 </button>
             </div>
         </div>
     `;
   detailsArea.insertAdjacentHTML("beforeend", controlsHtml);
 
-  // 3. Afegeix Listeners (Utilitzant l'URL pública)
-  document.getElementById("openPdfButton").addEventListener("click", () => {
-    if (url) {
-      window.open(url, "_blank");
-    } else {
-      console.error("No es pot obrir el PDF: URL no vàlida.");
-    }
-  });
-
-  document.getElementById("downloadPdfButton").addEventListener("click", () => {
-    if (url) {
-      // Mètode segur per forçar la descàrrega
-      const tempLink = document.createElement("a");
-      tempLink.href = url;
-      // Defineix el nom del fitxer a descarregar
-      const fileName = url.substring(url.lastIndexOf("/") + 1);
-      tempLink.download = fileName;
-      document.body.appendChild(tempLink);
-      tempLink.click();
-      document.body.removeChild(tempLink);
-    }
-  });
+  // 3. Afegeix el Listener només per a Obrir
+  const openButton = document.getElementById("openPdfButton");
+  if (openButton) {
+    openButton.addEventListener("click", () => {
+      if (url) {
+        // Obre l'URL pública del document en una nova pestanya
+        window.open(url, "_blank");
+      } else {
+        console.error("No es pot obrir el PDF: URL no vàlida.");
+      }
+    });
+  }
 }

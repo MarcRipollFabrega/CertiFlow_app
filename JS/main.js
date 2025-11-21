@@ -97,13 +97,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="footer-menu-container">
                     <ul id="navbar-menu" class="navbar-menu">
                         <li data-id="enviar" class="list active"> <a href="#enviar">
-                                <span class="icon">📤</span>
+                                <span class="icon"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAACL0lEQVR4nO3T4U8SYRwHcN70qje96i/oD+hPqDe29aboTauYNlaHc25FzCXCxUTJ2RJWmqmo3ANsatMBvpCBGtw6dYyjsgihUemZpYEMC3Ml8Gt3zZu+YDh2d7rpd/vudq8+z/N7nkcmO85xxIqv7+LZoP3yB9Ipj4vdoFNO8PCk9cK5BKnOQsYBYpd0yuNHGJ7qrzo/M3Q1/3n2PuR/DIoCZpMWiIwrIei4srJnx3FSnV19b4LQmAK+zGmhkCIEAX8tdsI7rwrmvSr4zTwvPepiGsG3N8ZdC0AVgbmlLoj66zg0xzzb/xkX0giWIwYIjd3gvuyC9gNufe2B2FQ9N9aNT08qv1z5FAFLIR2EXdXcJIrrJcCVXogH7gDtuQmZjx3C3erttQFIUg3cAtaibVBct/NgInD3P5joEO85/f3eD8mZBgi7a4D21MDbCQzSC48O3zteZQYOBjZ5WmCSfio9bHC1QJvXAi8oM/c/71MxksH+xWnoJK3Q7WuHTNKyKTjc6m4Fo9u0pxhq4mC2PbMEPHQ1FxR2zUlBYZ3LxCOliiIjUOvAo4puzWkOnhu9nmXxSsqE8Vwq1r6lHTUWy8F+duyvbIVbqImSBWyXTrF4pY1N119jaL3m3kjzz7I7fj28ze9YqGAIp+uchtjuKgcb/+ygXRSxidn1FH/GYqbWgS+w6OOXfRsqhHuwXuyE6OgO/GDcnMGQziyTMkqbNnSb0KslRdkorI1nJEfL5R9aCQbRhNnliQAAAABJRU5ErkJggg==" alt="send"></span>
                                 <span class="text">Enviar</span>
                             </a>
                         </li>
                         <li data-id="consultar" class="list">
                             <a href="#consultar">
-                                <span class="icon">🔍</span>
+                                <span class="icon"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAACcElEQVR4nO2ZT2sTQRjG90tY8Cso1GaTQhEhVHabv8Wbp5LspEWS3WKLvRpvaqu0F5N4M+5+CT3ZP7SieFPBQz3oJl/AtueOPLPZIIXE7e4kO6HzwgvDZBbe38wzzwwZRZEhY/Rh/rbvWR1nz3TtM6vj0FGm6dpnpmvv1rrOIp/iXXtz1EVbg9K1n/KYeRprdu1iaADIJnYA1/kQHsC1TwUAOImyAlSEVCRARwJQ4QDStXWq6oRLps31GADMCQewJl1ClgRwJMDVXoG0tFEibfRq7wFLAjgSYGw2+j+btGI5B8wJB7AiZuXTa1p48YTeKa/S2eIKS7TRh9+EBaj9ektzzx7T5MKQVctUaH6zzsYKBYCC5h8+YkWmchWa36rT8n6DVn+2WaKNwlPZZTZmfm2DfSMMAGYehc3dr1LjY2vgOOOoxcZgbGGrLgYAdA1pYOaHFW/5EIctbyUyFXorU7o5dhu96DzYnOiHbIJC5597K6Zqxs7YbfQiABwG/eWDZmCA0t4r9k1CM75xB7hszi6usGKqx+3A31SP2z7ASewAqVAAb3oA5E/sAH0J7TeCS2i3EVFCHP9eL7ys923xsraramQ7FADeqngBkM//2OhREBtteja6QM5n7pIboQDw0MZTRjhl+wfZEAjjsEmTOe80niuZ75UogYc2rleJtQ3vKpFdZkDQOTY2Em3Ixr9K9PT/fVpfmooG0bWLeKvisScAgX0AOakDL3Pk/HZp9R02b8+FfiQzD64rIgWuB6pm7HhFGqdI1tbItq/5mSy5ltDJV2EhgoSEECWm9aUpf0+ouvEl7npCBSBQfEIjB37nX89J06H01VxaAAAAAElFTkSuQmCC" width= 32px alt="fine-print"></span>
                                 <span class="text">Consultar</span>
                             </a>
                         </li>

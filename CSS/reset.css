@@ -47,6 +47,7 @@ a {
   --color-text-secondary: #715a5a;
   --color-accent: #039734; /* Verd principal */
   --shadow-dark: rgba(0, 0, 0, 0.4);
+  --color-surface-selected:#6344ec;
 
   /* INPUTS I BOTONS */
   --color-input-background: #3a4750;

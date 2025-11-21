@@ -4,7 +4,6 @@
 
 .consultar-wrapper {
     width: 100%;
-    max-width: 1500px; 
     margin-top: -20px;
     margin-bottom: 10px;    
     margin-left: auto;   
@@ -27,7 +26,9 @@
     /* Limita l'alçada del contenidor de columnes */
     max-height: 70vh; 
     height: 100%;
+    transition: all 0.3s ease-in-out; /* Per una animació suau */
 }
+
 
 /* ========================================================================= */
 /* 2. DEFINICIÓ DE COLUMNES DE LA CONSULTA */
@@ -44,8 +45,13 @@
 
 .consultar-wrapper .table-column {
     /* Columna Esquerra (Taula) */
-    flex: 4; 
-    min-width: 400px;
+    flex: 1; 
+    width: 100%;
+    transition: all 0.3s ease-in-out; 
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+
 }
 
 .consultar-wrapper .pdf-viewer-column {
@@ -57,13 +63,40 @@
     height: 100%;
     box-sizing: border-box;
     overflow: hidden;
-
+     width: 0;
+    max-width: 0;
+    transition: all 0.3s ease-in-out;
+    padding: 0; /* No hi ha padding quan està amagat */
+    opacity: 0; /* Fa que el contingut sigui invisible */
+    flex-shrink: 0;
 }
-consultar-wrapper .pdf-viewer-column h3 {
+
+.consultar-wrapper .pdf-viewer-column h3 {
     /* ⚠️ Assegurem que l'h3 no té flex-shrink ni flex-grow */
     flex-shrink: 0; /* No es redueix */
-    margin-top: 0;
-    margin-bottom: 5px; /* Marge definit prèviament */
+    margin-top: 5px;
+    margin-left: 10px;
+}
+
+.consultar-wrapper .pdf-viewer-column.visible {
+    /* Quan es visible, li donem una amplada fixa (p.ex., 400px o 30%) */
+    width: 450px; /* Amplada visible per als detalls */
+    max-width: 450px;
+    min-width: 450px; 
+    padding: 15px 5px 10px 5px;
+    opacity: 1; /* Fa que el contingut sigui visible */
+}
+
+.consultar-wrapper .table-column.contracted {
+    /* Contreu la columna de la taula per fer lloc al panell de detalls */
+    flex-grow: 1; /* Encara ocupa l'espai restant */
+    width: auto;
+    margin: 0;
+}
+/* 3. Evitar el text placeholder molest */
+ .consultar-wrapper .pdf-placeholder {
+    /* Aquesta classe assegura que el text placeholder no interfereix quan el panell és visible */
+    border: none;
 }
 
 /* ========================================================================= */
@@ -74,7 +107,7 @@ consultar-wrapper .pdf-viewer-column h3 {
 .consultar-wrapper .service-column h3 {
     color: var(--color-text-primary);
     margin-top: 0;
-    margin-bottom: 15px; 
+    margin-bottom: 5px; 
 }
 
 .consultar-wrapper .table-container {
@@ -106,7 +139,7 @@ consultar-wrapper .pdf-viewer-column h3 {
     text-align: left;
     border-bottom: 1px solid var(--color-border);
     color: var(--color-text-primary);
-    font-size: 0.9em;
+    font-size: 0.8em;
 }
 
 .consultar-wrapper .crud-table tbody tr:hover {
@@ -115,8 +148,8 @@ consultar-wrapper .pdf-viewer-column h3 {
 }
 
 .consultar-wrapper .crud-table tbody tr.selected {
-    background-color: var(--color-accent); 
-    color: var(--color-surface); 
+    background-color: var(--color-surface-selected); 
+    color: var(--color-text-on-accent); 
     font-weight: bold;
 }
 
@@ -167,37 +200,37 @@ consultar-wrapper .pdf-viewer-column h3 {
 
 /* ---------------------- RESUM DE DADES EXTREITES ---------------------- */
 
-.consultar-wrapper .document-summary {
+.consultar-wrapper .document-traza{
     flex-grow: 0; /* No creix, només ocupa l'espai necessari */
     padding-bottom: 15px;
 }
 
-.consultar-wrapper .document-summary p {
+.consultar-wrapper .document-traza p {
     margin: 5px 0;
     font-size: 0.95em;
     color: var(--color-text-secondary);
     text-align: left;
 }
 
-.consultar-wrapper .document-summary strong {
+.consultar-wrapper .document-traza strong {
     color: var(--color-text-primary);
     display: inline-block;
     min-width: 100px; /* Ajuda a alinear els valors */
     font-weight: 500;
 }
-.consultar-wrapper .document-summary hr {
+.consultar-wrapper .document-traza hr {
     border: 0;
     border-top: 1px dashed var(--color-border);
     margin: 10px 0;
 }
 /* ---------------------- NOU: QUADRE RESUM DE DADES ---------------------- */
 
-.consultar-wrapper .document-summary-box {
+.consultar-wrapper .document-traza-container {
     /* Caixa estilitzada per contenir el resum */
     border: 1px solid var(--color-border);
     background-color: var(--color-background); 
     flex-shrink: 0;
-    padding: 10px;
+    padding: 5px;
     border-radius: 6px;
     margin-bottom: 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -206,7 +239,7 @@ consultar-wrapper .pdf-viewer-column h3 {
 .consultar-wrapper .traza-box {
     flex-shrink: 0;
 }
-.consultar-wrapper .document-summary-box h4 {
+.consultar-wrapper .document-traza-container h4 {
     /* Títol "Resum" */
     color: var(--color-accent);
     margin-top: 0;
@@ -276,16 +309,6 @@ margin-top: 0;
 
 }
 
-.consultar-wrapper .secondary-action-button {
-    background-color: var(--color-surface); /* Botó secundari amb color del contenidor */
-    color: var(--color-accent);
-    border: 1px solid var(--color-accent);
-}
-
-.consultar-wrapper .secondary-action-button:hover {
-    background-color: var(--color-accent-light);
-}
-
 /* Estil per l'estat de càrrega (mentre s'obté la URL signada) */
 .consultar-wrapper .loading-state {
     text-align: center;
@@ -316,18 +339,6 @@ margin-top: 0;
 }
 
 .consultar-wrapper .primary-action-button:hover {
-    background-color: var(--color-button-primary-hover);
-    transform: translateY(-1px);
-}
-
-/* Estil del botó secundari (Descarregar Document) */
-.consultar-wrapper .secondary-action-button {
-    background-color: var(--color-button-primary);
-    color: var(--color-input-text);
-    border: 1px solid var(--color-accent);
-}
-
-.consultar-wrapper .secondary-action-button:hover {
     background-color: var(--color-button-primary-hover);
     transform: translateY(-1px);
 }
