@@ -10,18 +10,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const SUPABASE_URL = "https://eptthzlpezbmfmnhshkj.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdHRoemxwZXpibWZtbmhzaGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NDE4ODIsImV4cCI6MjA3NjIxNzg4Mn0.l_Twgr8Y2sDpmztHVCGiGVrqnIfo8jz58TXTq3kmtD0";
- //Login usuari
+  //Login usuari
   const LOGIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-login`;
   //Alta usuari
   const ALTA_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-alta`;
   //Delete usuari
   const DELETE_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-delete-user`;
-// Inicialització del client de Supabase
+  // Inicialització del client de Supabase
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
   );
-// Exposar variables globals per a altres mòduls
+  // Exposar variables globals per a altres mòduls
   window.ALTA_USUARIS_FUNCTION_URL = ALTA_USUARIS_FUNCTION_URL;
   window.supabaseClient = supabaseClient;
   window.DELETE_USUARIS_FUNCTION_URL = DELETE_USUARIS_FUNCTION_URL;
@@ -65,9 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 500);
     }, 4000);
   }
-// Funció per carregar el Dashboard
+  // Funció per carregar el Dashboard
   function loadAppDashboard() {
-// 1. Canvi de l'estructura del DOM per al Dashboard
+    // 1. Canvi de l'estructura del DOM per al Dashboard
     if (appContainer) {
       appContainer.classList.remove("login-container");
       appContainer.classList.add("app-layout");
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
- // === 4. INICIALITZACIÓ DE LA LÒGICA DE CONFIGURACIÓ DE CONTRASENYA ===
+  // === 4. INICIALITZACIÓ DE LA LÒGICA DE CONFIGURACIÓ DE CONTRASENYA ===
   const isInPasswordSetupMode = initializePasswordSetup(supabaseClient);
 
   if (isInPasswordSetupMode) {
@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return; // Atura l'execució addicional
   }
 
-// === 5. FUNCIONS DE GESTIÓ DE SESSIÓ I VISTES ===
+  // === 5. FUNCIONS DE GESTIÓ DE SESSIÓ I VISTES ===
   async function checkSession() {
     let session = null;
     let authReady = false;
@@ -199,13 +199,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }, 500);
     }).then(async () => {
-
-// 2. HI HA SESSIÓ ACTIVA
+      // 2. HI HA SESSIÓ ACTIVA
       if (session) {
         console.log("Sessió activa. Carregant Dashboard.");
         loadAppDashboard();
       } else {
-// 3. NO HI HA SESSIÓ ACTIVA       
+        // 3. NO HI HA SESSIÓ ACTIVA
         console.log("No hi ha sessió. Mostrant Login.");
         if (loginView) loginView.style.display = "block";
         if (setPasswordContainer) setPasswordContainer.style.display = "none";
@@ -213,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-// === 6. GESTIÓ DE L'ESDEVENIMENT DE SUBMISSIÓ DEL FORMULARI DE LOGIN ===
+  // === 6. GESTIÓ DE L'ESDEVENIMENT DE SUBMISSIÓ DEL FORMULARI DE LOGIN ===
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -226,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loginButton.disabled = true;
       loginButton.textContent = "Verificant...";
 
-// ==================== CRIDA A L'EDGE FUNCTION D'AUTENTICACIÓ ====================
+      // ==================== CRIDA A L'EDGE FUNCTION D'AUTENTICACIÓ ====================
       let data, error;
       let sessionData = null;
       try {
@@ -250,8 +249,8 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         console.error("Fetch Error:", err);
       }
-// ===============================================================================
-// Gestió de la resposta de l'Edge Function
+      // ===============================================================================
+      // Gestió de la resposta de l'Edge Function
       if (error) {
         console.error("Error Edge Function Auth:", error);
         showToast(
@@ -267,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
           console.error("Error establint la sessió:", sessionError);
           showToast("Error establint la sessió.", "error");
         } else {
-// Inici de sessió correcte
+          // Inici de sessió correcte
           showToast(
             "Inici de sessió correcte! Carregant aplicació...",
             "success"

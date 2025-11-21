@@ -1,0 +1,378 @@
+/* ========================================================================= */
+/* 1. CONTENIDOR PRINCIPAL DE LA CONSULTA (.consultar-wrapper) */
+/* ========================================================================= */
+
+.consultar-wrapper {
+    width: 100%;
+    max-width: 1500px; 
+    margin-top: -20px;
+    margin-bottom: 10px;    
+    margin-left: auto;   
+    margin-right: auto;
+}
+
+/* TÍTOL PRINCIPAL: Assegura la separació visual */
+.consultar-wrapper .crud-title {
+    color: var(--color-text-primary);
+    width: 100%;
+    margin-bottom: 5px; 
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.consultar-wrapper .split-view {
+    /* Activa Flexbox per a les columnes */
+    display: flex;
+    gap: 20px; 
+    /* Limita l'alçada del contenidor de columnes */
+    max-height: 70vh; 
+    height: 100%;
+}
+
+/* ========================================================================= */
+/* 2. DEFINICIÓ DE COLUMNES DE LA CONSULTA */
+/* ========================================================================= */
+
+.consultar-wrapper .service-column {
+    padding: 15px;
+    border-radius: 8px;
+    background-color: var(--color-surface); 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+    display: flex; 
+    flex-direction: column;
+}
+
+.consultar-wrapper .table-column {
+    /* Columna Esquerra (Taula) */
+    flex: 4; 
+    min-width: 400px;
+}
+
+.consultar-wrapper .pdf-viewer-column {
+    /* Columna Dreta (Detalls) */
+    flex: 3; 
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+
+}
+consultar-wrapper .pdf-viewer-column h3 {
+    /* ⚠️ Assegurem que l'h3 no té flex-shrink ni flex-grow */
+    flex-shrink: 0; /* No es redueix */
+    margin-top: 0;
+    margin-bottom: 5px; /* Marge definit prèviament */
+}
+
+/* ========================================================================= */
+/* 3. ESTILS DE LA TAULA I DETALLS */
+/* ========================================================================= */
+
+/* Títol intern de la columna (p. ex., "Registres de Documents") */
+.consultar-wrapper .service-column h3 {
+    color: var(--color-text-primary);
+    margin-top: 0;
+    margin-bottom: 15px; 
+}
+
+.consultar-wrapper .table-container {
+    flex-grow: 1; 
+    max-height: 70vh; 
+    height: calc(100% - 40px);
+    overflow-y: auto;  
+    padding-right: 5px;
+    margin-top: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+}
+
+.consultar-wrapper .crud-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.consultar-wrapper .crud-table thead tr {
+    background-color: var(--color-background); 
+    position: sticky; 
+    top: 0;
+    z-index: 10;
+}
+
+.consultar-wrapper .crud-table th,
+.consultar-wrapper .crud-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-size: 0.9em;
+}
+
+.consultar-wrapper .crud-table tbody tr:hover {
+    background-color: var(--color-accent-light); 
+    cursor: pointer;
+}
+
+.consultar-wrapper .crud-table tbody tr.selected {
+    background-color: var(--color-accent); 
+    color: var(--color-surface); 
+    font-weight: bold;
+}
+
+.consultar-wrapper .details-area {
+    padding: 0 15px 15px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    flex:1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.consultar-wrapper .pdf-placeholder-text {
+    text-align: center;
+    padding-top: 150px;
+    color: var(--color-text-secondary); 
+    font-style: italic;
+}
+
+.consultar-wrapper .document-traza {
+    margin-top: 20px;
+    border-top: 1px solid var(--color-border);
+    padding-top: 15px;
+}
+
+.consultar-wrapper .controls-area {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+}
+/* ========================================================================= */
+/* 3.1 ESTILS ESPECÍFICS DE L'ÀREA DE DETALLS (DRETA) */
+/* ========================================================================= */
+
+.consultar-wrapper .details-area {
+    /* Mantenim els estils bàsics definits anteriorment */
+    padding: 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    min-height: 400px; 
+    flex-grow: 1;
+    display: flex; /* Activem Flexbox per organitzar el contingut intern */
+    flex-direction: column; 
+    overflow-y: auto; /* Permetem scroll dins de l'àrea si el contingut és llarg */
+}
+
+/* ---------------------- RESUM DE DADES EXTREITES ---------------------- */
+
+.consultar-wrapper .document-summary {
+    flex-grow: 0; /* No creix, només ocupa l'espai necessari */
+    padding-bottom: 15px;
+}
+
+.consultar-wrapper .document-summary p {
+    margin: 5px 0;
+    font-size: 0.95em;
+    color: var(--color-text-secondary);
+    text-align: left;
+}
+
+.consultar-wrapper .document-summary strong {
+    color: var(--color-text-primary);
+    display: inline-block;
+    min-width: 100px; /* Ajuda a alinear els valors */
+    font-weight: 500;
+}
+.consultar-wrapper .document-summary hr {
+    border: 0;
+    border-top: 1px dashed var(--color-border);
+    margin: 10px 0;
+}
+/* ---------------------- NOU: QUADRE RESUM DE DADES ---------------------- */
+
+.consultar-wrapper .document-summary-box {
+    /* Caixa estilitzada per contenir el resum */
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background); 
+    flex-shrink: 0;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-top: 3px solid var(--color-accent); 
+}
+.consultar-wrapper .traza-box {
+    flex-shrink: 0;
+}
+.consultar-wrapper .document-summary-box h4 {
+    /* Títol "Resum" */
+    color: var(--color-accent);
+    margin-top: 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 5px;
+}
+
+
+
+/* ---------------------- TRAÇA DEL DOCUMENT ---------------------- */
+
+.consultar-wrapper .document-traza {
+margin-top: 0; 
+    padding-top: 0;
+    border-top: none;
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+}
+.consultar-wrapper .document-traza ul {
+    /* Estil per a la llista interna de la traça */
+    margin: 5px 0 0 15px;
+    padding: 0;
+    list-style-type: disc;
+}
+.consultar-wrapper .document-traza li {
+    margin-bottom: 5px;
+    padding-left: 5px;
+}
+
+.consultar-wrapper .document-traza h4 {
+    color: var(--color-text-primary);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+/* ---------------------- ÀREA DE CONTROLS I BOTONS ---------------------- */
+
+.consultar-wrapper .controls-area {
+    margin-top: auto; /* ⬅️ EMPENTA ELS BOTONS A BAIX */
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+}
+
+.consultar-wrapper .controls-area h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--color-text-primary);
+}
+
+.consultar-wrapper .action-button {
+    padding: 8px 15px;
+    font-size: 1em;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s, opacity 0.2s;
+    flex:1;
+    width: 100%; /* Botons d'ample complet */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.consultar-wrapper .secondary-action-button {
+    background-color: var(--color-surface); /* Botó secundari amb color del contenidor */
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+}
+
+.consultar-wrapper .secondary-action-button:hover {
+    background-color: var(--color-accent-light);
+}
+
+/* Estil per l'estat de càrrega (mentre s'obté la URL signada) */
+.consultar-wrapper .loading-state {
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-style: italic;
+    padding: 20px 0;
+}
+/* ---------------------- ESTILS DELS BOTONS D'ACCIÓ (OPEN/DOWNLOAD) ---------------------- */
+
+.consultar-wrapper .action-button {
+    /* Estil base comú a tots els botons d'acció */
+    padding: 10px 20px;
+    font-size: 1.1em;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: 100%; /* Ocupa tota l'amplada */
+    display: block; /* Assegura que ocupa tota l'amplada */
+}
+
+/* Estil del botó principal (Obrir PDF) */
+.consultar-wrapper .primary-action-button {
+    background-color: var(--color-button-primary);
+    color: var(--color-input-text); /* Text clar sobre el verd */
+}
+
+.consultar-wrapper .primary-action-button:hover {
+    background-color: var(--color-button-primary-hover);
+    transform: translateY(-1px);
+}
+
+/* Estil del botó secundari (Descarregar Document) */
+.consultar-wrapper .secondary-action-button {
+    background-color: var(--color-button-primary);
+    color: var(--color-input-text);
+    border: 1px solid var(--color-accent);
+}
+
+.consultar-wrapper .secondary-action-button:hover {
+    background-color: var(--color-button-primary-hover);
+    transform: translateY(-1px);
+}
+
+/* Títol de l'àrea d'Accions */
+.consultar-wrapper .controls-area h4 {
+    color: var(--color-heading-text);
+    margin-bottom: 10px;
+}
+
+/* Separador superior per a l'àrea de controls */
+.consultar-wrapper .controls-area {
+    margin-top: 15px; 
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+}
+.consultar-wrapper .button-group {
+    display: flex;
+    gap: 10px; /* Espai reduït entre els botons */
+    width: 100%;
+}
+
+
+/* ========================================================================= */
+/* 4. RESPONSIVE */
+/* ========================================================================= */
+
+@media (max-width: 900px) {
+    .consultar-wrapper .split-view {
+        flex-direction: column;
+        max-height: none; 
+    }
+    
+    .consultar-wrapper .table-column,
+    .consultar-wrapper .pdf-viewer-column {
+        flex: auto;
+        max-height: none; 
+    }
+
+    .consultar-wrapper .table-container {
+        max-height: 300px; 
+        overflow-x: auto;
+    }
+    .consultar-wrapper .crud-table {
+        min-width: 600px;
+        width: auto;
+    }
+}

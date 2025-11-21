@@ -2,6 +2,7 @@
 // aquest fitxer conté la lògica principal del dashboard, incloent la gestió de components dinàmics,
 // la càrrega de dades per als selects i el CRUD d'usuaris, així com la gestió de sessions i tancament de sessió.
 /***********************************************************************************************************************************/
+
 // Supabase Client i URL de l'Edge Function per eliminar usuaris
 const supabase = window.supabaseClient;
 const DELETE_USUARIS_FUNCTION_URL = window.DELETE_USUARIS_FUNCTION_URL;
@@ -406,11 +407,14 @@ async function loadComponent(componentName) {
       }
       break;
     case "consultar":
-      mainContent.innerHTML = `
-                <div class="dashboard-wrapper">
-                    <h2 class="section-title">Opcio CONSULTAR</h2>
-                    <p>Has fet clic a 🔍 **CONSULTAR**. Aquí anirà la taula de cerca d'historials.</p>
-                </div>`;
+      try {
+        const ConsultaModule = await import("./consulta.js");
+       const consultarComponent = ConsultaModule.createConsultarComponent();
+        mainContent.appendChild(consultarComponent);
+      } catch (error) {
+        console.error("Error al carregar el component Consultar:", error);
+        mainContent.innerHTML = `<div class="error-message">❌ Error al carregar la vista de consulta. Assegura't que 'consulta.js' existeix i exporta 'createConsultaComponent'.</div>`;
+      }
       break;
     case "admin":
       try {
@@ -437,7 +441,7 @@ async function loadComponent(componentName) {
         const tabContentContainer =
           document.getElementById("admin-tab-content");
 
-       // 3. Assignar esdeveniments als botons de pestanya
+        // 3. Assignar esdeveniments als botons de pestanya
         tabButtons.forEach((button) => {
           button.addEventListener("click", (e) => {
             const tabName = e.target.getAttribute("data-tab");
