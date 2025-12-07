@@ -9,12 +9,14 @@ export const KNOWN_PROVIDERS = [
   "Material Oficina Ràpid, SA",
   "Distribuïdora Tèxtil Mediterrània",
   "Tecno Solucions Innova, SL",
+  "Papereria Creativa SL",
 ];
 export const KNOWN_TECNICS = [
   "Laura Ferrer",
   "Marta Lopez",
   "Elena Jimenez",
   "Carla Puig",
+  "David Rodriguez",
 ];
 const KNOWN_CITIES = ["VALENCIA", "BARCELONA", "MADRID", "SEVILLA", "VALLÈS"];
 
@@ -171,7 +173,7 @@ export async function extractDataFromPDF(file) {
   }
   tempExtracted["Proveïdor"] = foundProvider;
 
- // c) Tècnic
+  // c) Tècnic
   let foundTecnic = "N/D";
   for (const tecnic of KNOWN_TECNICS) {
     if (fullText.toLowerCase().includes(tecnic.toLowerCase())) {
@@ -181,17 +183,64 @@ export async function extractDataFromPDF(file) {
   }
   tempExtracted["Tècnic"] = foundTecnic;
 
-  // d) Títol de l'informe (Nom del fitxer sense extensió)
-  tempExtracted["Titol de l'informe"] =
-    file.name.replace(/\.[^/.]+$/, "") || "Informe de Factura";
+  // d) Títol de l'informe: Captura el títol complet que comença per "INFORME TECNIC."
+  const titleDefault = "Títol no trobat, revisió manual necessària";
+  let extractedTitle = titleDefault;
+  // 1. INTENT DE CAPTURA FORMAL (Patró millorat per ser menys restrictiu)
+  // Afegim el text "INFORME TECNIC." a la captura si l'hem trobat.
+  const formalTitleMatch = fullText.match(
+    /INFORME\s+TECNIC\.\s*(.*?)(?=\n|TÈCNIC|JURIDIC|total|PROVEÏDOR|$)/i
+  );
+
+if (formalTitleMatch && formalTitleMatch[1]) {
+  // El grup [1] conté la frase completa, p. ex.: "CONTRACTES DERIVATS DE LICITACIONS PREVIES"
+  let descriptivePhrase = formalTitleMatch[1].trim().toUpperCase();
+
+  // --- LÒGICA DE TRADUCCIÓ/NORMALITZACIÓ ---
+
+  if (descriptivePhrase.includes("LICITACIONS")) {
+    extractedTitle = "LICITACIONS";
+  } else if (
+    descriptivePhrase.includes("ACORDS MARC") ||
+    descriptivePhrase.includes("ACORD MARC")
+  ) {
+    extractedTitle = "ACORD MARC";
+  } else if (
+    descriptivePhrase.includes("CONTRACTES MENORS") ||
+    descriptivePhrase.includes("MENOR")
+  ) {
+    extractedTitle = "MENOR";
+  } else if (descriptivePhrase.includes("LCSP")) {
+    extractedTitle = "NoLCSP";
+  }
+  // Si no es troba cap paraula clau, extractedTitle es manté com a titleDefault
+}
+
+  // 2. FALLBACK A TÍTOL DESCRIPTIU (Manté el codi anterior)
+  if (extractedTitle === titleDefault) {
+    // Lògica per trobar el valor entre "num mod A" i "total € (sense IVA)"
+    const descriptiveMatch = fullText.match(
+      /num\s+mod\s+A\:\s*(.*?)\s*total\s+€\s+\(sense\s+IVA\)/i
+    );
+
+    if (
+      descriptiveMatch &&
+      descriptiveMatch[1] &&
+      descriptiveMatch[1].trim().length > 0
+    ) {
+      extractedTitle = descriptiveMatch[1].trim();
+    }
+  }
+  // 3. ASSIGNACIÓ FINAL
+  tempExtracted["Titol de l'informe"] = extractedTitle;
 
   // e) Número Mod A (Robust)
   let numModA = "N/D";
   // 1. Cerca del patró aïllat
   const isolatedModAMatch = fullText.match(/\b([A-D]\d{3})\b/i);
-// Si es troba el patró aïllat, l'utilitzem directament
+  // Si es troba el patró aïllat, l'utilitzem directament
   if (isolatedModAMatch) {
-    numModA = isolatedModAMatch[1].trim().toUpperCase(); 
+    numModA = isolatedModAMatch[1].trim().toUpperCase();
   } else {
     // 2. Cerca del patró amb prefix "Num Mod A"
     const prefixedModAMatch = fullText.match(
