@@ -42,87 +42,96 @@ async function sendToDatabase(file, extractedData, sendToDbButton) {
         "Usuari no autenticat. Si us plau, torni a iniciar sessió."
       );
     }
-    const dbObject = prepareDataForDB(extractedData);
 
-    // 1. GENERACIÓ DELS CAMINS amb neteja de caràcters especials
-    const BUCKET_NAME = "documents";
-    const uniqueId = crypto.randomUUID();
+    // --- PAS 1: IDENTIFICAR EL SIGNANT ---
+    // El nom del tècnic ha d'estar extret a l'objecte extractedData (a una de les files)
+    // Assumim que la teva lògica d'extracció li posa la clau "Tècnic"
+    const signerRow = extractedData.rows.find((row) => row[0] === "Tècnic");
+    if (!signerRow)
+      throw new Error("No s'ha trobat el camp 'Tècnic' al document.");
 
-    // Neteja agressiva: Substitueix espais i elimina caràcters no segurs
-    let cleanedFileName = file.name
-      .replace(/\s/g, "_")
-      .replace(/[^a-zA-Z0-9._-]/g, "");
+    const signerName = signerRow[1];
+    let signerEmail = null;
 
-    // Assegura l'extensió si s'ha perdut
-    if (!cleanedFileName.toLowerCase().endsWith(".pdf")) {
-      cleanedFileName += ".pdf";
+    // Cerca l'email del signant a la taula 'usuaris'
+    const { data: userData, error: userError } = await supabase
+      .from("usuaris")
+      .select("email")
+      .eq("nom", signerName)
+      .single();
+
+    if (userError || !userData) {
+      console.error(
+        "❌ Error: No s'ha trobat l'email del firmant a la taula 'usuaris'.",
+        userError
+      );
+      throw new Error(`Firmant "${signerName}" no trobat a la BBDD.`);
     }
 
-    // RUTA PER AL STORAGE (Només el nom del fitxer, SENSE el prefix 'documents/')
-    const storagePath = `${uniqueId}_${Date.now()}_${cleanedFileName}`;
+    signerEmail = userData.email;
 
-    // RUTA COMPLETA PER A LA BBDD (Inclou el prefix 'documents/')
-    const fullFilePathForDB = `${BUCKET_NAME}/${storagePath}`;
+    // --- PAS 2: INSERCIÓ AL STORAGE ---
+    const fileName = file.name.replace(/\s+/g, "_");
+    const filePath = `${userId}_${Date.now()}_${fileName}`;
 
-    // =======================================================
-    // PAS 1: CARREGAR EL PDF A SUPABASE STORAGE
-    // =======================================================
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(storagePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+    const { error: storageError } = await supabase.storage
+      .from("documents") // El nom del teu bucket
+      .upload(filePath, file);
 
-    if (uploadError)
-      throw new Error(`Error en la càrrega del fitxer: ${uploadError.message}`);
+    if (storageError) throw storageError;
 
-    // =======================================================
-    // PAS 2: INSERIR EL REGISTRE A LA TAULA 'documents'
-    // =======================================================
-    const { data: documentData, error: dbError } = await supabase
+    // --- PAS 3: INSERCIÓ A LA TAULA 'documents' (PRINCIPAL) ---
+    // Utilitzem la versió modificada de prepareDataForDB
+    const dbData = prepareDataForDB(
+      extractedData,
+      filePath,
+      userId,
+      signerName
+    );
+
+    const { data: insertedDoc, error: dbError } = await supabase
       .from("documents")
-      .insert([
-        {
-          file_path: fullFilePathForDB,
-          enviat_per: userId,
-          data_extreta: dbObject,
-          estat_document: "Pendent",
-        },
-      ])
+      .insert(dbData)
       .select("id")
       .single();
 
-    if (dbError)
-      throw new Error(`Error en la inserció del document: ${dbError.message}`);
-    const documentId = documentData.id;
+    if (dbError) throw dbError;
+    const documentId = insertedDoc.id; // ID del document principal
 
-    // =======================================================
-    // PAS 3: REGISTRAR LA TRAÇA INICIAL
-    // =======================================================
-    const { error: trazaError } = await supabase.from("document_traza").insert([
-      {
+    // --- PAS 4: INSERCIÓ A LA TAULA 'documents_sign_flow' (WORKFLOW) ---
+    const { error: flowError } = await supabase
+      .from("documents_sign_flow")
+      .insert({
         document_id: documentId,
-        user_id: userId,
-        accio: "Enviat",
-        comentaris: "Document carregat i dades extretes correctament.",
-      },
-    ]);
+        signer_name: signerName,
+        signer_email: signerEmail,
+        status: "Pendent de signatura", // Estat inicial
+      });
 
-    if (trazaError) {
-      console.warn(
-        "⚠️ Advertència: Error al registrar la traça inicial:",
-        trazaError
-      );
-    }
+    if (flowError) throw flowError;
 
-    alert("✅ Document i dades enviades correctament a la BBDD!");
+    // --- PAS 5: CRIDA AL FLUX DE NOTIFICACIÓ (Edge Function) ---
+    await triggerNotificationFunction(documentId, signerEmail);
+
+    // --- PAS 6: Finalització ---
+    sendToDbButton.textContent = "✅ Document enviat i notificació disparada!";
+    sendToDbButton.classList.remove("primary-action-button");
+    sendToDbButton.classList.add("success-action-button");
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
   } catch (error) {
-    console.error("❌ ERROR FATAL en l'enviament a BBDD:", error);
-    alert(`❌ Error a l'enviar el document: ${error.message}`);
-  } finally {
-    sendToDbButton.disabled = false;
-    sendToDbButton.textContent = "Enviar a BBDD (JSON)";
+    console.error("Error durant el procés d'enviament:", error);
+    // Assegurar-se que el botó es reinicia si hi ha errors
+    sendToDbButton.textContent = "❌ Error a l'enviament";
+    sendToDbButton.classList.remove("primary-action-button");
+    sendToDbButton.classList.add("error-action-button");
+    setTimeout(() => {
+      sendToDbButton.textContent = "Enviar a BBDD (JSON)";
+      sendToDbButton.classList.remove("error-action-button");
+      sendToDbButton.classList.add("primary-action-button");
+      sendToDbButton.disabled = false;
+    }, 3000);
   }
 }
 
@@ -311,4 +320,23 @@ export function createEnviarComponent() {
   setTimeout(() => setupFileUploadListener(wrapper), 0);
 
   return wrapper;
+}
+/**
+ * Funció auxiliar per cridar la Edge Function de notificació.
+ */
+async function triggerNotificationFunction(documentId, signerEmail) {
+  const NOTIFICATION_FUNCTION_URL = window.NOTIFICATION_FUNCTION_URL;
+  
+  const response = await fetch(NOTIFICATION_FUNCTION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      document_id: documentId,
+      signer_email: signerEmail,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Error al disparar la Edge Function de notificació.");
+  }
 }

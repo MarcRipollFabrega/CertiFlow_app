@@ -16,6 +16,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const ALTA_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-alta`;
   //Delete usuari
   const DELETE_USUARIS_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/api-delete-user`;
+
+  // Edge Function per notificar al signant
+  window.NOTIFICATION_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/notify-signer`;
+  // Edge Function per gestionar la signatura i el segell del PDF
+  window.SIGNATURE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/apply-signature`;
+
   // Inicialització del client de Supabase
   const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,

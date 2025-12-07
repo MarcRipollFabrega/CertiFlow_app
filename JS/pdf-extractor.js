@@ -52,11 +52,18 @@ export function renderTable(data, tableContainer) {
 
   tableContainer.appendChild(table);
 }
-// --------------------------------------------------------------------------
-// PREPARACIÓ DE DADES PER A LA BASE DE DADES
-// --------------------------------------------------------------------------       
-export function prepareDataForDB(extractedData) {
-  const dbObject = {};
+/**
+ * Prepara les dades per a la inserció a la taula 'documents'.
+ * @param {object} extractedData - L'objecte de dades extretes (amb .rows).
+ * @param {string} filePath - La ruta al Supabase Storage.
+ * @param {string} userId - L'ID de l'usuari que envia.
+ * @param {string} signerName - El nom del firmant (Tècnic).
+ * @returns {object} Un objecte compatible amb la taula 'documents'.
+ */
+export function prepareDataForDB(extractedData, filePath, userId, signerName) {
+  const extractedFlatData = {}; // Objecte aplanat per a la columna data_extreta
+  
+  // 1. Aplanar les dades com feies abans
   extractedData.rows.forEach((row) => {
     const fieldName = row[0];
     const value = row[1];
@@ -67,9 +74,21 @@ export function prepareDataForDB(extractedData) {
       .replace(/\s+/g, "_")
       .replace(/[^a-zA-Z0-9_]/g, "")
       .toLowerCase();
-    dbObject[dbKey] = value;
+    extractedFlatData[dbKey] = value;
   });
-  return dbObject;
+  
+  // 2. Afegir el nom del signant a l'objecte JSON (per a la traça/auditoria)
+  extractedFlatData.signer_name = signerName;
+
+  // 3. Retornar l'estructura COMPLETA per a la taula 'documents'
+  return {
+    file_path: filePath,
+    enviat_per: userId,
+    estat_document: 'Enviat', // Per defecte
+    estat_aprovacio: 'Pendent', // Per defecte
+    data_extreta: JSON.stringify(extractedFlatData), // Objecte JSON
+    // El 'títol' es pot treure de extractedFlatData si existeix
+  };
 }
 
 // --------------------------------------------------------------------------
