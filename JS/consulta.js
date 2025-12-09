@@ -558,7 +558,8 @@ const isSigner =
           },
           body: JSON.stringify({
             document_id: documentId,
-            file_path: filePath,
+            storage_path: filePath,
+            signer_name: signerName,
             signer_email: currentUserEmail,
             signer_user_id: signerUserId, // Passem l'ID de l'usuari
           }),
