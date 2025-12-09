@@ -115,8 +115,8 @@ async function fetchAndDisplayDocuments(wrapper) {
         data_extreta, 
         estat_aprovacio,
         document_traza ( timestamp, accio, comentaris, user_id ),
-        document_sign_flow:documents_sign_flow ( signer_email, status, document_id, created_at )
-      ` // 💡 Seleccionem documents_sign_flow per la lògica de signatura
+        document_sign_flow:documents_sign_flow ( signer_email, signer_name, status, document_id, created_at )
+      ` 
     )
     .order("created_at", { ascending: false }); // Ordenem per data de creació
 
