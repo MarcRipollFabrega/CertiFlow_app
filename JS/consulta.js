@@ -11,6 +11,8 @@ const APPLY_SIGNATURE_FUNCTION_URL = window.APPLY_SIGNATURE_FUNCTION_URL;
 
 let lastPublicUrl = null; // Variable global
 
+let selectedSignerName = null;
+
 // =========================================================================
 // Funcions Auxiliars
 // =========================================================================
@@ -458,8 +460,14 @@ function renderActionButtons(detailsArea, url, documentData, currentUserEmail) {
   // 2. Comprovar si s'ha de mostrar el botó de signatura
   // Assumim un sol signant (documents_sign_flow és un array amb un element)
   const signFlow = documentData.document_sign_flow
-    ? documentData.document_sign_flow
+    ? documentData.document_sign_flow[0]
     : null; 
+
+    if (signFlow) {
+      selectedSignerName = signFlow.signer_name;
+    } else {
+      selectedSignerName = null;
+    }
 
   console.log("Estat Signatura BBDD:", signFlow ? signFlow.status : "N/A");
   console.log(
@@ -559,7 +567,7 @@ const isSigner =
           body: JSON.stringify({
             document_id: documentId,
             storage_path: filePath,
-            signer_name: signerName,
+            signer_name: selectedSignerName,
             signer_email: currentUserEmail,
             signer_user_id: signerUserId, // Passem l'ID de l'usuari
           }),
