@@ -361,6 +361,38 @@ margin-top: 0;
     width: 100%;
 }
 
+/* ========================================================================= */
+/* 5. ESTATS CONDICIONALS (Icona i Color per a Signatura Pendent) */
+/* ========================================================================= */
+
+/* Estil base per als estats de document */
+.consultar-wrapper .crud-table .status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-input-text); 
+    line-height: 1; 
+}
+
+/* Posicionament i mida de la icona */
+.consultar-wrapper .crud-table .status-icon {
+    font-size: 1.1em;
+    margin-right: 5px;
+    vertical-align: middle; /* Ajuda a alinear la icona amb el text */
+    display: inline-block; 
+}
+
+/* 🆕 Estil visual per a la icona de ploma (✍️) */
+.consultar-wrapper .crud-table .pending-icon {
+    color: var(--color-warning, orange);
+    font-weight: bold;
+}
+
+
+
 
 /* ========================================================================= */
 /* 4. RESPONSIVE */

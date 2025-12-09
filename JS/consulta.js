@@ -115,7 +115,7 @@ async function fetchAndDisplayDocuments(wrapper) {
         data_extreta, 
         estat_aprovacio,
         document_traza ( timestamp, accio, comentaris, user_id ),
-        documents_sign_flow ( signer_email, status, document_id, created_at )
+        document_sign_flow:documents_sign_flow ( signer_email, status, document_id, created_at )
       ` // 💡 Seleccionem documents_sign_flow per la lògica de signatura
     )
     .order("created_at", { ascending: false }); // Ordenem per data de creació
@@ -157,6 +157,7 @@ function createTableElement(data) {
         <th>Tècnic</th>
         <th>Mod A</th>
         <th>Proveïdor</th>
+        <th>Estat Signatura</th> 
         <th>Estat Document</th>
       </tr>
     </thead>
@@ -175,6 +176,24 @@ function createTableElement(data) {
           const fullDataString = JSON.stringify(doc);
           const encodedData = encodeURIComponent(fullDataString);
 
+          // Lògica d'accés a la relació niuada (CORRECTA)
+          const signFlow = doc.document_sign_flow;
+
+          // 💡 NOU: Calculem l'estat de signatura per a la nova columna
+          const signFlowStatus = signFlow ? signFlow.status : "N/A";
+
+          // 🛠️ CORRECCIÓ CLAU: Utilitzem .trim() per eliminar espais invisibles en la comparació
+         const isPendingSignature =
+           signFlow && signFlowStatus.trim() === "Pendent de signatura";
+
+          const alertIcon = isPendingSignature
+            ? '<span class="status-icon pending-icon">✍️</span>' // Icona de ploma per signatura
+            : "";
+
+          const statusClass =
+            doc.estat_document.toLowerCase() +
+            (isPendingSignature ? " pending-sign" : "");
+
           return `
           <tr 
             data-full-doc='${encodedData}'
@@ -184,9 +203,10 @@ function createTableElement(data) {
             <td>${tecnic}</td>
             <td>${numModA}</td>
             <td>${proveidor}</td>
-            <td><span class="status ${doc.estat_document.toLowerCase()}">${
-            doc.estat_document
-          }</span></td>
+            
+            <td>${alertIcon} ${signFlowStatus}</td>
+            
+           <td><span class="status ${statusClass}">${doc.estat_document}</span></td>
           </tr>
         `;
         })
@@ -437,18 +457,24 @@ function renderActionButtons(detailsArea, url, documentData, currentUserEmail) {
 
   // 2. Comprovar si s'ha de mostrar el botó de signatura
   // Assumim un sol signant (documents_sign_flow és un array amb un element)
-  const signFlow = documentData.documents_sign_flow
-    ? documentData.documents_sign_flow[0]
-    : null;
+  const signFlow = documentData.document_sign_flow
+    ? documentData.document_sign_flow
+    : null; 
 
-  // Condició per mostrar el botó de Signar:
-  // a) Existeix un flux de signatura.
-  // b) L'estat és 'Pendent de signatura'.
-  // c) L'email del signant coincideix amb l'email de l'usuari actual.
-  const isSigner =
-    signFlow &&
-    signFlow.status === "Pendent de signatura" &&
-    signFlow.signer_email === currentUserEmail;
+  console.log("Estat Signatura BBDD:", signFlow ? signFlow.status : "N/A");
+  console.log(
+    "Email del Signant BBDD:",
+    signFlow ? signFlow.signer_email : "N/A"
+  );
+  console.log("Email de l'Usuari Actual:", currentUserEmail);
+
+const isSigner =
+  signFlow &&
+  signFlow.status.trim() === "Pendent de signatura" &&
+  signFlow.signer_email.toLowerCase().trim() ===
+    currentUserEmail.toLowerCase().trim();
+
+  console.log("Condició isSigner:", isSigner);
 
   let controlsHtml = `
     <div class="controls-area">
@@ -497,6 +523,23 @@ function renderActionButtons(detailsArea, url, documentData, currentUserEmail) {
     signButton.addEventListener("click", async () => {
       signButton.disabled = true;
       signButton.textContent = "Signant... ⏳";
+
+      if (
+        !APPLY_SIGNATURE_FUNCTION_URL ||
+        APPLY_SIGNATURE_FUNCTION_URL.includes("undefined")
+      ) {
+        alert(
+          "Error de configuració: La URL de la funció de signatura no s'ha carregat correctament. Revisa main.js."
+        );
+        console.error(
+          "URL de la Edge Function INVÀLIDA:",
+          APPLY_SIGNATURE_FUNCTION_URL
+        );
+        signButton.disabled = false;
+        signButton.textContent = "Signar Document";
+        return; // Sortir de la funció
+      }
+
 
       const documentId = signButton.dataset.documentId;
       const filePath = signButton.dataset.filePath;

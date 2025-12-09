@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Edge Function per notificar al signant
   window.NOTIFICATION_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/notify-signer`;
   // Edge Function per gestionar la signatura i el segell del PDF
-  window.SIGNATURE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/apply-signature`;
+const APPLY_SIGNATURE_FUNCTION_URL = "/api-signature";
 
   // Inicialització del client de Supabase
   const supabaseClient = window.supabase.createClient(
@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.ALTA_USUARIS_FUNCTION_URL = ALTA_USUARIS_FUNCTION_URL;
   window.supabaseClient = supabaseClient;
   window.DELETE_USUARIS_FUNCTION_URL = DELETE_USUARIS_FUNCTION_URL;
+  window.APPLY_SIGNATURE_FUNCTION_URL = APPLY_SIGNATURE_FUNCTION_URL;
 
   // === 2. REFERÈNCIES ALS ELEMENTS DEL DOM ===
   const appContainer = document.getElementById("app-container");
