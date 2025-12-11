@@ -14,7 +14,7 @@ let lastPublicUrl = null; // Variable global
 let selectedSignerName = null;
 
 // =========================================================================
-// Funcions Auxiliars
+// 1. FUNCIONS AUXILIARS
 // =========================================================================
 
 /**
@@ -64,7 +64,164 @@ function safeParseDataExtreta(data) {
 }
 
 // =========================================================================
-// 1. FUNCIÓ PRINCIPAL EXPORTADA
+// 2. LÒGICA DEL WORKFLOW DE SIGNATURA (NOVA SECCIÓ PER CORREGIR L'ERROR)
+// =========================================================================
+
+// Ordre del workflow de signatura: Tècnic -> Cap de Secció -> Jurídic -> Gerent
+// 💡 NOTA: S'utilitza el rol 'Técnic' tal com apareix en les dades SQL de 'usuaris'
+const SIGN_ORDER = {
+  Técnic: "Cap de Secció",
+  "Cap de Secció": "Jurídic",
+  Jurídic: "Gerent",
+  Gerent: "Finalitzat",
+};
+
+/**
+ * Funció auxiliar per cridar l'Edge Function de notificació.
+ */
+async function triggerNotificationFunction(documentId, signerEmail) {
+  const NOTIFICATION_FUNCTION_URL = window.NOTIFICATION_FUNCTION_URL;
+
+  const response = await fetch(NOTIFICATION_FUNCTION_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      document_id: documentId,
+      signer_email: signerEmail,
+      action: "pending_sign", // L'acció que usi la teva Edge Function
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.error) {
+    console.error(
+      "❌ Error a la notificació:",
+      result.error || "Error desconegut"
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Funció per obtenir les dades (email, nom, id) d'un usuari pel seu rol.
+ */
+async function getSignerDetailsByRole(role) {
+  const { data, error } = await supabase
+    .from("usuaris")
+    .select("id, email, nom")
+    .eq("role", role)
+    // 💡 IMPORTANT: Si hi ha múltiples usuaris amb el mateix rol, s'agafa el primer.
+    .limit(1)
+    .single();
+
+  if (error || !data) {
+    if (role !== "Finalitzat") {
+      console.error(`❌ No s'ha trobat usuari per al rol: ${role}`, error);
+    }
+    return { email: null, name: null, id: null };
+  }
+  return { email: data.email, name: data.nom, id: data.id };
+}
+
+/**
+ * 🛠️ GESTOR PRINCIPAL: Gestiona el clic al botó de signatura, actualitza l'estat del document
+ * i avisa al següent signant.
+ */
+async function handleSignDocument(
+  documentId,
+  filePath,
+  currentSignerEntry, // L'entrada Pendent de l'usuari actual
+  detailsArea,
+  signButton
+) {
+  signButton.disabled = true;
+  signButton.textContent = "Signant... ⏳";
+
+  const currentRole = currentSignerEntry.signer_name;
+  const nextRole = SIGN_ORDER[currentRole];
+
+  // 1. CRIDA A L'EDGE FUNCTION DE SIGNATURA I ACTUALITZACIÓ
+  try {
+    const response = await fetch(APPLY_SIGNATURE_FUNCTION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        document_id: documentId,
+        file_path: filePath,
+        signer_email: currentSignerEntry.signer_email,
+        signer_name: currentRole,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || result.error) {
+      throw new Error(
+        result.error || "Error desconegut a l'Edge Function de signatura."
+      );
+    }
+
+    // 2. DETERMINAR SI EL FLUX HA FINALITZAT
+    if (nextRole === "Finalitzat") {
+      // Actualitzem l'estat del document principal
+      await supabase
+        .from("documents")
+        .update({ estat_document: "Aprovat" })
+        .eq("id", documentId);
+
+      signButton.textContent = "✅ Document Finalitzat!";
+      const controlsArea = detailsArea.querySelector(".controls-area");
+      if (controlsArea) {
+        controlsArea.innerHTML =
+          '<p class="success-message">Flux de signatura completat i document aprovat.</p>';
+      }
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      return;
+    }
+
+    // 3. TROBAR EL PRÒXIM SIGNANT
+    const nextSigner = await getSignerDetailsByRole(nextRole);
+
+    if (!nextSigner.email) {
+      throw new Error(
+        `❌ No s'ha trobat cap usuari amb el rol '${nextRole}' per continuar el flux.`
+      );
+    }
+
+    // 4. INSERCIÓ DE LA NOVA FILA (documents_sign_flow) - PENDENT PEL SEGUENT SIGNANT
+    const { error: flowError } = await supabase
+      .from("documents_sign_flow")
+      .insert({
+        document_id: documentId,
+        signer_name: nextSigner.name,
+        signer_email: nextSigner.email,
+        status: "Pendent de signatura", // Estat inicial del nou signant
+      });
+
+    if (flowError) throw flowError;
+
+    // 5. CRIDA AL FLUX DE NOTIFICACIÓ (per avisar al *següent* signant)
+    await triggerNotificationFunction(documentId, nextSigner.email);
+
+    // 6. ÈXIT
+    signButton.textContent = "✅ Signat! Notificant a " + nextSigner.name;
+    // Recarregar la taula per veure els canvis
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  } catch (error) {
+    console.error("Error al signar i avançar el flux:", error);
+    alert(`❌ Error al signar: ${error.message}`);
+    signButton.textContent = "✍️ Signar Document";
+    signButton.disabled = false;
+  }
+}
+
+// =========================================================================
+// 3. FUNCIÓ PRINCIPAL EXPORTADA
 // =========================================================================
 export function createConsultarComponent() {
   const wrapper = document.createElement("div");
@@ -99,14 +256,14 @@ export function createConsultarComponent() {
 }
 
 // =========================================================================
-// 2. GESTIÓ DE DADES (Fetch)
+// 4. GESTIÓ DE DADES (Fetch)
 // =========================================================================
 
 /**
  * Obté les dades de la BBDD i renderitza la taula, incloent la traça i el flux de signatura.
  */
 async function fetchAndDisplayDocuments(wrapper) {
-  // 💡 CANVI: AFEGIM documents_sign_flow al SELECT per carregar les dades del flux de signatura
+  // 💡 SELECT INCLOU documents_sign_flow
   const { data: documents, error } = await supabase
     .from("documents")
     .select(
@@ -118,7 +275,7 @@ async function fetchAndDisplayDocuments(wrapper) {
         estat_aprovacio,
         document_traza ( timestamp, accio, comentaris, user_id ),
         document_sign_flow:documents_sign_flow ( signer_email, signer_name, status, document_id, created_at )
-      ` 
+      `
     )
     .order("created_at", { ascending: false }); // Ordenem per data de creació
 
@@ -142,7 +299,7 @@ async function fetchAndDisplayDocuments(wrapper) {
 }
 
 // =========================================================================
-// 3. RENDERITZACIÓ DE LA TAULA
+// 5. RENDERITZACIÓ DE LA TAULA
 // =========================================================================
 
 /**
@@ -180,13 +337,11 @@ function createTableElement(data) {
 
           // Lògica d'accés a la relació niuada (CORRECTA)
           const signFlow = doc.document_sign_flow;
-
-          // 💡 NOU: Calculem l'estat de signatura per a la nova columna
           const signFlowStatus = signFlow ? signFlow.status : "N/A";
 
           // 🛠️ CORRECCIÓ CLAU: Utilitzem .trim() per eliminar espais invisibles en la comparació
-         const isPendingSignature =
-           signFlow && signFlowStatus.trim() === "Pendent de signatura";
+          const isPendingSignature =
+            signFlow && signFlowStatus.trim() === "Pendent de signatura";
 
           const alertIcon = isPendingSignature
             ? '<span class="status-icon pending-icon">✍️</span>' // Icona de ploma per signatura
@@ -219,7 +374,7 @@ function createTableElement(data) {
 }
 
 // =========================================================================
-// 4. LÓGICA DE DETALLS I BOTONS (Nou panell de la dreta)
+// 6. LÓGICA DE DETALLS I BOTONS (Nou panell de la dreta)
 // =========================================================================
 function clearSelectionAndPanel(wrapper) {
   const tableContainer = wrapper.querySelector("#consultarTableContainer");
@@ -406,7 +561,7 @@ function filterTable(searchText) {
   });
 }
 // =========================================================================
-// 5. GESTIÓ D'ACCÉS AL PDF PÚBLIC (Amb Lògica de Botons)
+// 7. GESTIÓ D'ACCÉS AL PDF PÚBLIC (Amb Lògica de Botons)
 // =========================================================================
 /**
  * Obté directament l'URL pública del fitxer.
@@ -508,7 +663,7 @@ function renderActionButtons(detailsArea, url, documentData, currentUserEmail) {
   }
 
   // ---------------------------------------------------------------------
-  // LOGS DE DEBUGGING (Ara haurien de funcionar)
+  // LOGS DE DEBUGGING
   console.log(
     "Tipus de document_sign_flow (Després del check):",
     Array.isArray(signFlowData) ? "array" : typeof signFlowData
@@ -563,15 +718,18 @@ function renderActionButtons(detailsArea, url, documentData, currentUserEmail) {
     });
   }
 
-  // 4. AFEGIR LISTENER PER AL BOTÓ DE SIGNAR (Sense canvis aquí)
+  // 4. 🛠️ CORRECCIÓ CLAU: AFEGIR LISTENER PER AL BOTÓ DE SIGNAR
   const signButton = document.getElementById("signDocumentButton");
   if (signButton) {
+    // CRIDA LA NOVA FUNCIÓ QUE GESTIONA LA SIGNATURA I L'AVANÇ DEL FLUX
     signButton.addEventListener("click", async () => {
-      // ... (Tota la teva lògica de crida a l'Edge Function)
-      // ... (Aquesta part no ha canviat)
-      signButton.disabled = true;
-      signButton.textContent = "Signant... ⏳";
-      // ... (Tota la lògica de FETCH a APPLY_SIGNATURE_FUNCTION_URL)
+      await handleSignDocument(
+        documentData.id,
+        documentData.file_path,
+        pendingSignEntry, // L'entrada Pendent del signant actual
+        detailsArea,
+        signButton
+      );
     });
   }
 }
