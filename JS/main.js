@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.NOTIFICATION_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/notify-signer`;
   // Edge Function per gestionar la signatura i el segell del PDF
 //const APPLY_SIGNATURE_FUNCTION_URL = "/api-signature";
-const APPLY_SIGNATURE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/sign-document-v2`;
+const APPLY_SIGNATURE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/test-deno-only`;
 
   // Inicialització del client de Supabase
   const supabaseClient = window.supabase.createClient(
