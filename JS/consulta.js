@@ -230,7 +230,6 @@ function createTableElement(data) {
     <tbody>
       ${data
         .map((doc) => {
-          // 💡 CORRECCIÓ CLAU: Utilitza el parser segur per obtenir l'objecte dataExtreta.
           const dataExtreta = safeParseDataExtreta(doc.data_extreta);
 
           // Extracció de dades (camps de taula)
@@ -242,11 +241,27 @@ function createTableElement(data) {
           const fullDataString = JSON.stringify(doc);
           const encodedData = encodeURIComponent(fullDataString);
 
-          // Lògica d'accés a la relació niuada (CORRECTA)
-          const signFlow = doc.document_sign_flow;
-          const signFlowStatus = signFlow ? signFlow.status : "N/A";
+          // Lògica d'accés a la relació niuada
+          let signFlow = doc.document_sign_flow;
 
-          // 🛠️ CORRECCIÓ CLAU: Utilitzem .trim() per eliminar espais invisibles en la comparació
+          // 💡 CORRECCIÓ CLAU: La variable que conté l'estat, gestionant null/undefined.
+          //const signFlowStatus = signFlow ? signFlow.status ?? "" : "N/A";
+          let signFlowStatus = "N/A";
+          if (Array.isArray(signFlow) && signFlow.length > 0) {
+            // 💡 1. Ordena per 'created_at' (més recent primer) per agafar l'últim estat
+            const lastEntry = signFlow.sort(
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            )[0];
+
+            // 💡 2. Agafa l'estat, assegurant-se que no és null/undefined
+            signFlow = lastEntry; // Reassignem signFlow a l'últim objecte per la compatibilitat de la funció
+            signFlowStatus = signFlow.status ?? "";
+          } else if (signFlow !== null && typeof signFlow === "object") {
+            // Cas en què Supabase només retorna un objecte (menys comú en relacions 1:M)
+            signFlowStatus = signFlow.status ?? "";
+          }
+
+          // 🛠️ Ús segur de .trim() sobre una cadena:
           const isPendingSignature =
             signFlow && signFlowStatus.trim() === "Pendent de signatura";
 
@@ -268,9 +283,7 @@ function createTableElement(data) {
             <td>${numModA}</td>
             <td>${proveidor}</td>
             
-            <td>${alertIcon} ${signFlowStatus}</td>
-            
-           <td><span class="status ${statusClass}">${doc.estat_document}</span></td>
+            <td>${alertIcon} ${signFlowStatus}</td> <td><span class="status ${statusClass}">${doc.estat_document}</span></td>
           </tr>
         `;
         })
