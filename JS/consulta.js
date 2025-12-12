@@ -2,6 +2,9 @@
 // consultar.js
 // Mòdul per visualitzar dades de la BBDD i gestionar l'accés PÚBLIC al PDF.
 //-----------------------------------------------------------------------------
+
+import { handleSignDocument } from "./signar.js";
+
 const supabase = window.supabaseClient;
 const BUCKET_NAME = "documents";
 // La URL base per a l'accés públic al Storage:
@@ -122,102 +125,6 @@ async function getSignerDetailsByRole(role) {
     return { email: null, name: null, id: null };
   }
   return { email: data.email, name: data.nom, id: data.id };
-}
-
-/**
- * 🛠️ GESTOR PRINCIPAL: Gestiona el clic al botó de signatura, actualitza l'estat del document
- * i avisa al següent signant.
- */
-async function handleSignDocument(
-  documentId,
-  filePath,
-  currentSignerEntry, // L'entrada Pendent de l'usuari actual
-  detailsArea,
-  signButton
-) {
-  signButton.disabled = true;
-  signButton.textContent = "Signant... ⏳";
-
-  const currentRole = currentSignerEntry.signer_name;
-  const nextRole = SIGN_ORDER[currentRole];
-
-  // 1. CRIDA A L'EDGE FUNCTION DE SIGNATURA I ACTUALITZACIÓ
-  try {
-    const response = await fetch(APPLY_SIGNATURE_FUNCTION_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        document_id: documentId,
-        file_path: filePath,
-        signer_email: currentSignerEntry.signer_email,
-        signer_name: currentRole,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || result.error) {
-      throw new Error(
-        result.error || "Error desconegut a l'Edge Function de signatura."
-      );
-    }
-
-    // 2. DETERMINAR SI EL FLUX HA FINALITZAT
-    if (nextRole === "Finalitzat") {
-      // Actualitzem l'estat del document principal
-      await supabase
-        .from("documents")
-        .update({ estat_document: "Aprovat" })
-        .eq("id", documentId);
-
-      signButton.textContent = "✅ Document Finalitzat!";
-      const controlsArea = detailsArea.querySelector(".controls-area");
-      if (controlsArea) {
-        controlsArea.innerHTML =
-          '<p class="success-message">Flux de signatura completat i document aprovat.</p>';
-      }
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-      return;
-    }
-
-    // 3. TROBAR EL PRÒXIM SIGNANT
-    const nextSigner = await getSignerDetailsByRole(nextRole);
-
-    if (!nextSigner.email) {
-      throw new Error(
-        `❌ No s'ha trobat cap usuari amb el rol '${nextRole}' per continuar el flux.`
-      );
-    }
-
-    // 4. INSERCIÓ DE LA NOVA FILA (documents_sign_flow) - PENDENT PEL SEGUENT SIGNANT
-    const { error: flowError } = await supabase
-      .from("documents_sign_flow")
-      .insert({
-        document_id: documentId,
-        signer_name: nextSigner.name,
-        signer_email: nextSigner.email,
-        status: "Pendent de signatura", // Estat inicial del nou signant
-      });
-
-    if (flowError) throw flowError;
-
-    // 5. CRIDA AL FLUX DE NOTIFICACIÓ (per avisar al *següent* signant)
-    await triggerNotificationFunction(documentId, nextSigner.email);
-
-    // 6. ÈXIT
-    signButton.textContent = "✅ Signat! Notificant a " + nextSigner.name;
-    // Recarregar la taula per veure els canvis
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
-  } catch (error) {
-    console.error("Error al signar i avançar el flux:", error);
-    alert(`❌ Error al signar: ${error.message}`);
-    signButton.textContent = "✍️ Signar Document";
-    signButton.disabled = false;
-  }
 }
 
 // =========================================================================
@@ -693,7 +600,7 @@ function renderActionButtons(detailsArea, url, documentData, currentUserEmail) {
         class="action-button primary-action-button" 
         data-document-id="${documentData.id}"
         data-file-path="${documentData.file_path}"
-      >
+        data-document-title="${documentData.titol}"  >
         <span class="icon">✍️</span> Signar Document (Com a ${pendingSignEntry.signer_name})
       </button>
     `;
@@ -723,13 +630,21 @@ function renderActionButtons(detailsArea, url, documentData, currentUserEmail) {
   if (signButton) {
     // CRIDA LA NOVA FUNCIÓ QUE GESTIONA LA SIGNATURA I L'AVANÇ DEL FLUX
     signButton.addEventListener("click", async () => {
-      await handleSignDocument(
-        documentData.id,
-        documentData.file_path,
-        pendingSignEntry, // L'entrada Pendent del signant actual
-        detailsArea,
-        signButton
-      );
+      const documentId = signButton.getAttribute("data-document-id");
+      const documentTitle = signButton.getAttribute("data-document-title");
+
+      // ❌ Aquest helper (getCurrentUserEmail) s'hauria de mantenir a consulta.js o exportar-se.
+      // Assumim que l'has mantingut a consulta.js
+      const signerEmail = await getCurrentUserEmail();
+
+      if (documentId && signerEmail && documentTitle) {
+        // ✅ Trucada a la funció del nou mòdul
+        await handleSignDocument(documentId, signerEmail, documentTitle);
+      } else {
+        alert(
+          "Error: Falten dades (ID document, Email usuari o Títol) per signar."
+        );
+      }
     });
   }
 }
