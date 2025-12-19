@@ -197,7 +197,8 @@ async function fetchAndDisplayDocuments(wrapper) {
   }
 
   if (documents && documents.length > 0) {
-    const tableElement = createTableElement(documents);
+    const currentUserEmail = await getCurrentUserEmail();
+    const tableElement = createTableElement(documents, currentUserEmail);
     tableContainer.appendChild(tableElement);
     loadTableListeners(wrapper);
   } else {
@@ -212,7 +213,7 @@ async function fetchAndDisplayDocuments(wrapper) {
 /**
  * Crea l'element de la taula HTML amb els camps sol·licitats.
  */
-function createTableElement(data) {
+function createTableElement(data, currentUserEmail) {
   const table = document.createElement("table");
   table.classList.add("crud-table");
   table.innerHTML = `
@@ -231,59 +232,57 @@ function createTableElement(data) {
       ${data
         .map((doc) => {
           const dataExtreta = safeParseDataExtreta(doc.data_extreta);
-
-          // Extracció de dades (camps de taula)
           const titol = dataExtreta.titol_de_linforme || "N/A";
           const dataInforme = dataExtreta.data_informe || "N/A";
           const tecnic = dataExtreta.tecnic || "N/A";
           const numModA = dataExtreta.numero_mod_a || "N/A";
           const proveidor = dataExtreta.proveidor || "N/A";
-          const fullDataString = JSON.stringify(doc);
-          const encodedData = encodeURIComponent(fullDataString);
 
-          // Lògica d'accés a la relació niuada
-          let signFlow = doc.document_sign_flow;
+          const signFlowArray = Array.isArray(doc.document_sign_flow)
+            ? doc.document_sign_flow
+            : [];
 
-          // 💡 CORRECCIÓ CLAU: La variable que conté l'estat, gestionant null/undefined.
-          //const signFlowStatus = signFlow ? signFlow.status ?? "" : "N/A";
           let signFlowStatus = "N/A";
-          if (Array.isArray(signFlow) && signFlow.length > 0) {
-            // 💡 1. Ordena per 'created_at' (més recent primer) per agafar l'últim estat
-            const lastEntry = signFlow.sort(
-              (a, b) => new Date(b.created_at) - new Date(a.created_at)
-            )[0];
+          let isMyPendingSignature = false;
 
-            // 💡 2. Agafa l'estat, assegurant-se que no és null/undefined
-            signFlow = lastEntry; // Reassignem signFlow a l'últim objecte per la compatibilitat de la funció
-            signFlowStatus = signFlow.status ?? "";
-          } else if (signFlow !== null && typeof signFlow === "object") {
-            // Cas en què Supabase només retorna un objecte (menys comú en relacions 1:M)
-            signFlowStatus = signFlow.status ?? "";
+          if (signFlowArray.length > 0) {
+            // 1. Obtenim l'estat més recent per al text de la taula
+            const sortedFlow = [...signFlowArray].sort(
+              (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            );
+            signFlowStatus = sortedFlow[0].status ?? "N/A";
+
+            // 2. Comprovem si l'usuari actual té una signatura pendent
+            if (currentUserEmail) {
+              isMyPendingSignature = signFlowArray.some(
+                (entry) =>
+                  entry.status.trim() === "Pendent de signatura" &&
+                  entry.signer_email.toLowerCase().trim() ===
+                    currentUserEmail.toLowerCase().trim()
+              );
+            }
           }
 
-          // 🛠️ Ús segur de .trim() sobre una cadena:
-          const isPendingSignature =
-            signFlow && signFlowStatus.trim() === "Pendent de signatura";
-
-          const alertIcon = isPendingSignature
-            ? '<span class="status-icon pending-icon">✍️</span>' // Icona de ploma per signatura
+          const alertIcon = isMyPendingSignature
+            ? '<span class="status-icon pending-icon">✍️</span>'
             : "";
 
+          // Apliquem la classe 'pending-sign' només si és el MEU pendent
           const statusClass =
             doc.estat_document.toLowerCase() +
-            (isPendingSignature ? " pending-sign" : "");
+            (isMyPendingSignature ? " pending-sign" : "");
 
           return `
-          <tr 
-            data-full-doc='${encodedData}'
-          >
+          <tr data-full-doc='${encodeURIComponent(JSON.stringify(doc))}'>
             <td>${titol}</td>
             <td>${dataInforme}</td>
             <td>${tecnic}</td>
             <td>${numModA}</td>
             <td>${proveidor}</td>
-            
-            <td>${alertIcon} ${signFlowStatus}</td> <td><span class="status ${statusClass}">${doc.estat_document}</span></td>
+            <td>${alertIcon} ${signFlowStatus}</td> 
+            <td><span class="status ${statusClass}">${
+            doc.estat_document
+          }</span></td>
           </tr>
         `;
         })
@@ -292,7 +291,6 @@ function createTableElement(data) {
   `;
   return table;
 }
-
 // =========================================================================
 // 6. LÓGICA DE DETALLS I BOTONS (Nou panell de la dreta)
 // =========================================================================
@@ -499,35 +497,41 @@ async function getSignedUrlAndRender(fullDocumentData, detailsArea) {
   }
 
   try {
-    // 1. Netejar el camí (per obtenir només el nom del fitxer)
+    // 1. Netejar el camí
     const pathWithoutBucket = filePath.startsWith(BUCKET_NAME + "/")
       ? filePath.substring(BUCKET_NAME.length + 1)
-      : filePath; // 2. GENERAR DIRECTAMENT LA URL PÚBLICA (No cal SignedUrl si és públic)
+      : filePath;
 
-    finalUrl = PUBLIC_URL_BASE + pathWithoutBucket;
+    // 2. GENERAR URL PÚBLICA BASE
+    const baseUrl = PUBLIC_URL_BASE + pathWithoutBucket;
 
-    // 3. Verificació de l'URL (per si BUCKET_NAME o filePath estiguessin buits)
-    if (!finalUrl || finalUrl.endsWith("/")) {
+    // 3. 🛠️ MODIFICACIÓ CLAU: AFEGIR PARÀMETRE ANTI-CACHE
+    // Afegim un timestamp (?t=...) per forçar el navegador a descarregar el fitxer real de nou
+    finalUrl = `${baseUrl}?t=${new Date().getTime()}`;
+
+    // 4. Verificació de l'URL
+    if (!baseUrl || baseUrl.endsWith("/")) {
       throw new Error(
         "La URL generada no és vàlida. Revisa BUCKET_NAME o file_path."
       );
     }
 
-    console.log("URL generada:", finalUrl); // 4. Obtenció de l'email i Renderització dels botons
+    console.log("URL generada (sense cache):", finalUrl);
 
+    // 5. Obtenció de l'email i Renderització dels botons
     const currentUserEmail = await getCurrentUserEmail();
-    // 🛑 APLIQUEM TRY/CATCH PER CAPTURAR ERRORS DE renderActionButtons
+
     renderActionButtons(
       detailsArea,
-      finalUrl,
+      finalUrl, // Passem la URL amb el paràmetre de temps
       fullDocumentData,
       currentUserEmail
-    ); // 5. Finalització exitosa
+    );
 
     lastPublicUrl = finalUrl;
     if (loadingStateDiv) loadingStateDiv.remove();
   } catch (error) {
-    console.error("❌ ERROR FATAL a getSignedUrlAndRender:", error); // 6. Mostrar missatge d'error en cas de fallada
+    console.error("❌ ERROR FATAL a getSignedUrlAndRender:", error);
     if (loadingStateDiv) {
       loadingStateDiv.innerHTML = `<p class="error-message">❌ No s'ha pogut carregar el document: ${error.message}</p>`;
     } else {
