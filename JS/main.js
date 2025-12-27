@@ -127,7 +127,7 @@ const APPLY_SIGNATURE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/apply-signatu
             </footer>
         `;
 
-      // 3. LÒGICA DEL TEMA (Ha de venir després de que el DOM s'hagi actualitzat)
+      // 3. LÒGICA DEL TEMA 
       const themeToggle = document.getElementById("theme-toggle");
       const savedTheme = localStorage.getItem("theme");
 
@@ -155,6 +155,7 @@ const APPLY_SIGNATURE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/apply-signatu
       if (!document.getElementById(dashboardScriptId)) {
         const script = document.createElement("script");
         script.id = dashboardScriptId;
+        script.type = "module";
         script.src = "/JS/dashboard.js";
         script.onload = () => {
           if (window.renderDashboard) {

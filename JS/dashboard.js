@@ -89,7 +89,7 @@ async function loadRolesFunction(selectElement) {
     return [];
   }
 }
-// Funció per guardar canvis d'usuari (deixem l'original per a compatibilitat)
+// Funció per guardar canvis d'usuari 
 async function loadDepartamentsFunction(selectElement) {
   if (selectElement) selectElement.innerHTML = "";
   const placeholderOption = document.createElement("option");
@@ -224,9 +224,8 @@ async function deleteUserByEmailFunction(email) {
   }
 
 // ======================================================= 
-// 2. ELIMINAR L'USUARI DE LA TAULA AUTH.USERS VIA EDGE FUNCTION  
+// ELIMINAR L'USUARI DE LA TAULA AUTH.USERS VIA EDGE FUNCTION  
 //======================================================
-// Crida a l'Edge Function per eliminar l'usuari d'auth.users
   try {
     const sessionData = (await supabase.auth.getSession()).data.session;
     if (!sessionData) {
@@ -234,7 +233,6 @@ async function deleteUserByEmailFunction(email) {
       return false;
     }
     const token = sessionData.access_token;
-// Crida a l'Edge Function
     const response = await fetch(DELETE_USUARIS_FUNCTION_URL, {
       method: "POST",
       headers: {
@@ -243,7 +241,6 @@ async function deleteUserByEmailFunction(email) {
       },
       body: JSON.stringify({ email: email }), 
     });
-// Processar la resposta
     const result = await response.json();
 // Comprovar errors
     if (!response.ok || result.error) {
@@ -264,7 +261,6 @@ async function deleteUserByEmailFunction(email) {
   }
 }
 // Funció per carregar un fitxer CSS dinàmicament
-
 function loadCSS(href, id) {
   if (document.getElementById(id)) {
     return;

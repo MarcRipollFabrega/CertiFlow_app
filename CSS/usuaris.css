@@ -319,30 +319,30 @@ table tr.editing td:last-child {
 /* ESTILS ESPECÍFICS PER A CADA ROL D'USUARI */
 /* ================================================= */
 
-/* 🟦 ROL: Gerent */
+/*  ROL: Gerent */
 .admin-table .rol-gerent .role-badge { 
     background-color: var(--color-accent-light, #c0e0ff);
     color: var(--color-accent-dark, #0056b3);
 }
 
-/* 🟥 ROL: Cap de secció Tècnic */
+/*  ROL: Cap de secció Tècnic */
 .admin-table .rol-cap-de-seccio .role-badge {
     background-color: #ffe0b2; 
     color: #e65100;           
 }
 
-/* 🟩 ROL: Compres */
+/*  ROL: Compres */
 .admin-table .rol-compres .role-badge { 
     background-color: var(--color-success-light, #e6ffe6);
     color: var(--color-success-dark, #388e3c);
 }
 
-/* 🟪 ROL: Jurídic */
+/*  ROL: Jurídic */
 .admin-table .rol-juridic .role-badge {
     background-color: #e1bee7; 
     color: #6a1b9a;           
 }
-/* ⚙️ NOU: ROL Tècnic (Sanejada a 'tecnic') */
+/*  ROL Tècnic  */
 .admin-table .rol-tecnic .role-badge {
     background-color: #d1e7dd; 
     color: #08665b;           
@@ -362,37 +362,37 @@ table tr.editing td:last-child {
     min-width: 70px;
 }
 
-/* 🟢 DEP: Ocupació */
+/*  DEP: Ocupació */
 .admin-table .dpt-ocupacio .dpt-badge { 
     background-color: #e8f5e9; 
     color: #388e3c;           
 }
 
-/* 🟡 DEP: Intermediació */
+/*  DEP: Intermediació */
 .admin-table .dpt-intermediacio .dpt-badge { 
     background-color: #fffde7; 
     color: #fbc02d;           
 }
 
-/* 📚 DEP: Formació */
+/*  DEP: Formació */
 .admin-table .dpt-formacio .dpt-badge { 
     background-color: #e3f2fd; 
     color: #1976d2;           
 }
 
-/* 🚀 DEP: Dinamització Empresarial */
+/*  DEP: Dinamització Empresarial */
 .admin-table .dpt-dinamitzacio-empresarial .dpt-badge { 
     background-color: #fbe9e7; 
     color: #e64a19;           
 }
 
-/* 📑 DEP: Gestió de recursos */
+/*  DEP: Gestió de recursos */
 .admin-table .dpt-gestio-de-recursos .dpt-badge { 
     background-color: #fbe9e7; 
     color: #8e24aa;           
 }
 
-/* 👑 DEP: Gerència */
+/*  DEP: Gerència */
 .admin-table .dpt-gerencia .dpt-badge { 
     background-color: #eceff1; 
     color: #455a64;           

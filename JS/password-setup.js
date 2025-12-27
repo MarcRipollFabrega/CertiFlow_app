@@ -107,7 +107,7 @@ async function handleSetPassword(
   } = await supabaseClient.auth.verifyOtp({
     email: email,
     token: token,
-    type: verificationType, // <-- ÚS DEL TIPUS DINÀMIC
+    type: verificationType, 
   });
 
   if (verifyError) {

@@ -1,5 +1,4 @@
 //-----------------------------------------------------------------------------
-// signar.js
 // Lògica completa per gestionar la signatura d'un document i avançar el flux.
 //-----------------------------------------------------------------------------
 const supabase = window.supabaseClient;
@@ -11,7 +10,7 @@ const NOTIFICATION_FUNCTION_URL = window.NOTIFICATION_FUNCTION_URL;
 // =========================================================================
 
 /**
- * Funció per obtenir el rol de l'usuari actual des de la BBDD (format 'Tècnic').
+ * Funció per obtenir el rol de l'usuari actual des de la BBDD Supabase.
  * @returns {string | null}
  */
 async function getCurrentUserRoleFromDB() {
@@ -35,8 +34,8 @@ async function getCurrentUserRoleFromDB() {
 
 /**
  * Funció per mapejar el rol actual al següent rol necessari.
- * @param {string} currentRoleDB - Rol actual en format BBDD (ex: 'Tècnic').
- * @returns {string} El nom del pròxim rol o 'FINALITZAT'.
+ * @param {string} currentRoleDB 
+ * @returns {string} 
  */
 function getNextRole(currentRoleDB) {
   switch (currentRoleDB) {
@@ -55,8 +54,8 @@ function getNextRole(currentRoleDB) {
 
 /**
  * Funció per obtenir les dades del pròxim signant segons el rol.
- * @param {string} nextRole - El rol que estem buscant (ex: 'Cap de Secció').
- * @returns {object | null} Les dades de l'usuari o null.
+ * @param {string} nextRole 
+ * @returns {object | null} 
  */
 async function getSignerDetailsByRole(nextRole) {
   if (nextRole === "FINALITZAT" || !nextRole) {
@@ -115,9 +114,9 @@ async function triggerNotificationFunction(
 
 /**
  * Funció principal per gestionar la signatura del document i l'avanç del flux.
- * @param {string} documentId - ID del document.
- * @param {string} signerEmail - Email de l'usuari actual que signa.
- * @param {string} documentTitle - Títol del document per a notificacions.
+ * @param {string} documentId 
+ * @param {string} signerEmail 
+ * @param {string} documentTitle 
  */
 export async function handleSignDocument(
   documentId,
@@ -131,7 +130,6 @@ export async function handleSignDocument(
   }
 
   try {
-    // 1. OBTENIR TOKEN D'AUTENTICACIÓ (NOU PAS NECESSARI)
     const {
       data: { session },
       error: sessionError,
@@ -141,7 +139,7 @@ export async function handleSignDocument(
     }
     const jwt = session.access_token;
 
-    // 2. Trucada a la Edge Function (APPLY-SIGNATURE)
+ 
     const response = await fetch(APPLY_SIGNATURE_FUNCTION_URL, {
       method: "POST",
       headers: {
@@ -166,7 +164,7 @@ export async function handleSignDocument(
     const result = await response.json();
     console.log("Edge Function Response:", result.message);
 
-    // 2. Determinar el rol actual i el següent
+
     const currentRoleDB = await getCurrentUserRoleFromDB();
     if (!currentRoleDB) {
       throw new Error("No es pot determinar el rol de l'usuari actual (BBDD).");
@@ -174,16 +172,16 @@ export async function handleSignDocument(
 
     const nextRole = getNextRole(currentRoleDB);
 
-    // 3. Gestionar el pròxim pas
+
     if (nextRole === "FINALITZAT") {
-      // 3a. Finalització del flux
+
       alert(`✅ Document signat correctament i flux FINALITZAT.`);
     } else if (nextRole) {
-      // 3b. Avançar al pròxim signant
+ 
       const nextSignerDetails = await getSignerDetailsByRole(nextRole);
 
       if (nextSignerDetails) {
-        // 4. Notificar el pròxim signant
+
         const notificationMessage = await triggerNotificationFunction(
           documentId,
           nextSignerDetails.email,
@@ -207,7 +205,7 @@ export async function handleSignDocument(
     console.error("Error al signar i avançar el flux:", error);
     alert(`Error al signar i avançar el flux: Error: ${error.message}`);
   } finally {
-    // 5. Neteja i recàrrega
+
     if (signButton) {
       signButton.disabled = false;
       signButton.textContent = "Signar Document";

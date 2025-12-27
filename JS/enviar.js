@@ -1,5 +1,4 @@
 //-----------------------------------------------------------------------------
-// Enviar.js
 // Mòdul per gestionar la càrrega, previsualització i enviament de dades extretes
 // des de documents PDF.
 //-----------------------------------------------------------------------------
@@ -43,10 +42,8 @@ async function sendToDatabase(file, extractedData, sendToDbButton) {
       );
     }
 
-    // --- PAS 1: IDENTIFICAR EL SIGNANT ---
-    // El nom del tècnic ha d'estar extret a l'objecte extractedData (a una de les files)
-    // Assumim que la teva lògica d'extracció li posa la clau "Tècnic"
-    const signerRow = extractedData.rows.find((row) => row[0] === "Tècnic");
+    // IDENTIFICAR EL SIGNANT I EL SEU EMAIL
+         const signerRow = extractedData.rows.find((row) => row[0] === "Tècnic");
     if (!signerRow)
       throw new Error("No s'ha trobat el camp 'Tècnic' al document.");
 
@@ -70,7 +67,7 @@ async function sendToDatabase(file, extractedData, sendToDbButton) {
 
     signerEmail = userData.email;
 
-    // --- PAS 2: INSERCIÓ AL STORAGE ---
+    //INSERCIÓ AL STORAGE DE SUPABASE
     const fileName = file.name.replace(/\s+/g, "_");
     const filePath = `${userId}_${Date.now()}_${fileName}`;
 
@@ -80,9 +77,8 @@ async function sendToDatabase(file, extractedData, sendToDbButton) {
 
     if (storageError) throw storageError;
 
-    // --- PAS 3: INSERCIÓ A LA TAULA 'documents' (PRINCIPAL) ---
-    // Utilitzem la versió modificada de prepareDataForDB
-    const dbData = prepareDataForDB(
+    // INSERCIÓ A LA TAULA 'documents'
+        const dbData = prepareDataForDB(
       extractedData,
       filePath,
       userId,
@@ -98,22 +94,22 @@ async function sendToDatabase(file, extractedData, sendToDbButton) {
     if (dbError) throw dbError;
     const documentId = insertedDoc.id; // ID del document principal
 
-    // --- PAS 4: INSERCIÓ A LA TAULA 'documents_sign_flow' (WORKFLOW) ---
+    // INSERCIÓ A LA TAULA 
     const { error: flowError } = await supabase
       .from("documents_sign_flow")
       .insert({
         document_id: documentId,
         signer_name: signerName,
         signer_email: signerEmail,
-        status: "Pendent de signatura", // Estat inicial
+        status: "Pendent de signatura", 
       });
 
     if (flowError) throw flowError;
 
-    // --- PAS 5: CRIDA AL FLUX DE NOTIFICACIÓ (Edge Function) ---
+    // CRIDA AL FLUX DE NOTIFICACIÓ 
     await triggerNotificationFunction(documentId, signerEmail);
 
-    // --- PAS 6: Finalització ---
+    // Actualitzar l'estat del botó i reiniciar la pàgina
     sendToDbButton.textContent = "✅ Document enviat i notificació disparada!";
     sendToDbButton.classList.remove("primary-action-button");
     sendToDbButton.classList.add("success-action-button");
@@ -261,7 +257,7 @@ export function createEnviarComponent() {
   const wrapper = document.createElement("div");
   wrapper.classList.add("enviar-wrapper");
 
-  // 1. COLUMNA ESQUERRA (Dades i Controls)
+  // 1. COLUMNA ESQUERRA (Dades Extretes i Controls)
   const leftColumn = document.createElement("div");
   leftColumn.classList.add("service-column", "data-extraction-column");
 
@@ -321,9 +317,7 @@ export function createEnviarComponent() {
 
   return wrapper;
 }
-/**
- * Funció auxiliar per cridar la Edge Function de notificació.
- */
+ //Funció auxiliar per cridar la Edge Function de notificació.
 async function triggerNotificationFunction(documentId, signerEmail) {
   const NOTIFICATION_FUNCTION_URL = window.NOTIFICATION_FUNCTION_URL;
   

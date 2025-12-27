@@ -279,7 +279,7 @@ margin-top: 0;
 /* ---------------------- ÀREA DE CONTROLS I BOTONS ---------------------- */
 
 .consultar-wrapper .controls-area {
-    margin-top: auto; /* ⬅️ EMPENTA ELS BOTONS A BAIX */
+    margin-top: auto; 
     padding-top: 15px;
     border-top: 1px solid var(--color-border);
     display: flex;
@@ -302,7 +302,7 @@ margin-top: 0;
     font-weight: 600;
     transition: background-color 0.2s, opacity 0.2s;
     flex:1;
-    width: 100%; /* Botons d'ample complet */
+    width: 100%; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -335,7 +335,7 @@ margin-top: 0;
 /* Estil del botó principal (Obrir PDF) */
 .consultar-wrapper .primary-action-button {
     background-color: var(--color-button-primary);
-    color: var(--color-input-text); /* Text clar sobre el verd */
+    color: var(--color-input-text); 
 }
 
 .consultar-wrapper .primary-action-button:hover {
@@ -381,11 +381,11 @@ margin-top: 0;
 .consultar-wrapper .crud-table .status-icon {
     font-size: 1.1em;
     margin-right: 5px;
-    vertical-align: middle; /* Ajuda a alinear la icona amb el text */
+    vertical-align: middle; 
     display: inline-block; 
 }
 
-/* 🆕 Estil visual per a la icona de ploma (✍️) */
+/* Estil visual per a la icona de ploma (✍️) */
 .consultar-wrapper .crud-table .pending-icon {
     color: var(--color-warning, orange);
     font-weight: bold;

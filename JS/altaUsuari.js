@@ -1,22 +1,19 @@
-/*  altaUsuari.js
-    Mòdul per crear el CRUD d'Alta d'Usuaris amb selecció de Rols i Departaments.
-*/
 /**
  * Crea el CRUD per donar d'alta nous usuaris amb selecció de rols i departaments.
  * @param {function} loadRolesFunction 
  * @param {function} loadDepartamentsFunction 
  * @returns {HTMLElement} 
  */
-/* 1. Exportar la funció createAltaUsuarisCRUD*/
+/* Exportar la funció createAltaUsuarisCRUD*/
 export function createAltaUsuarisCRUD(
   loadRolesFunction,
   loadDepartamentsFunction 
 ) {
-  // 1. Crear el contenidor principal del CRUD
+  // Crear el contenidor principal del CRUD
   const crudContainer = document.createElement("div");
   crudContainer.className = "crud-container";
 
-  // 2. Afegir el contingut HTML del formulari d'alta d'usuari
+  // Afegir el contingut HTML del formulari d'alta d'usuari
   crudContainer.innerHTML = `
         <h3 class="crud-title">✅ Alta de Nou Usuari</h3>
 <form id="altaUsuariForm" class="crud-form">
@@ -54,23 +51,23 @@ export function createAltaUsuarisCRUD(
         <p id="adminMissatgeEstat" class="status-message"></p>
     `;
 
-  // 3. Referències als elements del formulari
+  // Referències als elements del formulari
   const form = crudContainer.querySelector("#altaUsuariForm");
   const roleSelect = crudContainer.querySelector("#adminRole");
   const departamentSelect = crudContainer.querySelector("#adminDepartament"); 
   const altaButton = crudContainer.querySelector("#altaUsuariButton");
   const missatgeEstat = crudContainer.querySelector("#adminMissatgeEstat");
 
- // 4. Funció per carregar rols i seleccionar "Tècnic" per defecte
+ // Funció per carregar rols i seleccionar "Tècnic" per defecte
   const wrappedLoadRoles = async (selectElement) => {
-    // 1. Carregar els rols
+    // Carregar els rols
     await loadRolesFunction(selectElement);
-    // 2. Seleccionar "Tècnic" per defecte
+    // Seleccionar "Tècnic" per defecte
     const targetRole = "Tècnic";
     const options = Array.from(selectElement.options);
     options.forEach((opt) => (opt.selected = false));
     const tecnicOption = options.find((opt) => opt.textContent === targetRole);
-// 3. Si es troba, seleccionar-lo; si no, deixar el SELECT en blanc
+// Si es troba, seleccionar-lo; si no, deixar el SELECT en blanc
     if (tecnicOption) {
       tecnicOption.selected = true;
     } else {
@@ -89,16 +86,16 @@ export function createAltaUsuarisCRUD(
     loadDepartamentsFunction(departamentSelect); 
   }
 
- // 5. Gestió de l'esdeveniment de submissió del formulari
+ // Gestió de l'esdeveniment de submissió del formulari
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-// 6. Obtenir els valors dels camps del formulari
+// Obtenir els valors dels camps del formulari
     const nom = crudContainer.querySelector("#adminNom").value.trim();
     const email = crudContainer.querySelector("#adminEmail").value.trim();
     const role = roleSelect.value.trim();
-    const nom_departament = departamentSelect.value.trim(); // ✅ Lectura del nou SELECT
+    const nom_departament = departamentSelect.value.trim(); 
     const altaFunctionUrl = window.ALTA_USUARIS_FUNCTION_URL;
-// 7. Validar que tots els camps estan omplerts
+// Validar que tots els camps estan omplerts
     if (!altaFunctionUrl || !nom || !email || !role || !nom_departament) {
       missatgeEstat.textContent =
         "❌ Cal omplir tots els camps i seleccionar un rol i un departament.";
@@ -106,12 +103,12 @@ export function createAltaUsuarisCRUD(
       return;
     }
 
-   // 8. Desactivar el botó i mostrar missatge de procés
+   // Desactivar el botó i mostrar missatge de procés
     altaButton.disabled = true;
     altaButton.textContent = "Processant... ⏳";
     missatgeEstat.textContent = "Cridant Edge Function per enviar invitació...";
     missatgeEstat.className = "status-message info";
-// 9. Cridar l'Edge Function per donar d'alta l'usuari
+// Cridar l'Edge Function per donar d'alta l'usuari
     try {
       const response = await fetch(altaFunctionUrl, {
         method: "POST",
@@ -124,7 +121,7 @@ export function createAltaUsuarisCRUD(
         }),
       });
       const result = await response.json();
-// 10. Gestionar la resposta de l'Edge Function
+// Gestionar la resposta de l'Edge Function
       if (response.ok && !result.error) {
         missatgeEstat.textContent = `✅ Usuari pendent de confirmació. Correu de validació enviat a: ${email}.`;
         missatgeEstat.className = "status-message success";
@@ -132,7 +129,7 @@ export function createAltaUsuarisCRUD(
 // Restablir seleccions de Rols i Departaments
         if (loadRolesFunction) wrappedLoadRoles(roleSelect); // Restableix i selecciona 'Tècnic'
         if (loadDepartamentsFunction)
-          loadDepartamentsFunction(departamentSelect); // ✅ Recarrega departaments
+          loadDepartamentsFunction(departamentSelect); 
       } else {
         const errorMessage =
           result.error_description ||

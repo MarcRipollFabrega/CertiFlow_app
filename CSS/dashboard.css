@@ -8,10 +8,8 @@
         "header header"
         "nav main"
         "nav footer";
-    /* La capçalera i el peu tenen una alçada fixa */
     grid-template-rows: 60px 1fr 50px; 
-    /* La navegació inicialment té 0px, es canviarà amb el menú.js */
-    grid-template-columns: 0 1fr; 
+       grid-template-columns: 0 1fr; 
     min-height: 100vh;
     width: 100%;
     background-color: var(--color-background); 

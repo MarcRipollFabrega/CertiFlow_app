@@ -1,19 +1,16 @@
-/*=======================================================
-  JS/llistaUsuaris.js 
-*/
 // =======================================================
 // 1. FUNCIÓ PRINCIPAL EXPORTADA
 // =======================================================
 
 /**
  * Funció que crea l'element DOM de la taula de llistat d'Usuaris.
- * @param {function} loadUsuarisFunction - Funció asíncrona per carregar les dades dels usuaris.
- * @param {Array<string>} roles - Array amb tots els noms de rols disponibles.
- * @param {Array<string>} departaments - Array amb tots els noms de departaments disponibles.
- * @param {function} onSaveFunction - Funció asíncrona per guardar els canvis a Supabase.
- * @param {function} onReloadFunction - Funció per recarregar el component admin després de guardar.
- * @param {function} onDeleteFunction - 🚨 NOU: Funció asíncrona per eliminar un usuari de Supabase.
- * @returns {HTMLElement} El div contenidor amb la taula.
+ * @param {function} loadUsuarisFunction 
+ * @param {Array<string>} roles 
+ * @param {Array<string>} departaments 
+ * @param {function} onSaveFunction 
+ * @param {function} onReloadFunction 
+ * @param {function} onDeleteFunction 
+ * @returns {HTMLElement} 
  */
 export function createLlistaUsuarisTable(
   loadUsuarisFunction,
@@ -41,7 +38,6 @@ export function createLlistaUsuarisTable(
   const contentDiv = tableContainer.querySelector("#llistaUsuarisContent");
   const statusMessage = tableContainer.querySelector("#llistaUsuarisEstat");
 
-// 💡 HELPER: Funció per crear un SELECT amb opcions
   const createSelectHTML = (fieldName, optionsArray, currentValue) => {
     let optionsHTML = optionsArray
       .map(
@@ -54,7 +50,7 @@ export function createLlistaUsuarisTable(
     return `<select data-field="${fieldName}" class="edit-select">${optionsHTML}</select>`;
   };
 
-  // 💡 HELPER: Funció per estandarditzar noms (per classes CSS)
+
   const standardizeName = (name) => {
     if (!name) return "";
     // 1. Convertir a minúscules

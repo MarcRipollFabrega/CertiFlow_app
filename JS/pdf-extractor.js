@@ -20,11 +20,11 @@ export const KNOWN_TECNICS = [
 ];
 const KNOWN_CITIES = ["VALENCIA", "BARCELONA", "MADRID", "SEVILLA", "VALLÈS"];
 
-// Patró per a preus senzills (amb o sense separadors de milers)
+// Patró per a preus senzills 
 const PRICE_SIMPLE_PATTERN =
   /([0-9]{1,3}(?:[.,\s][0-9]{3})*[.,][0-9]{2}|[0-9]+[.,][0-9]{2})/i;
 // --------------------------------------------------------------------------
-// FUNCIONS D'UTILITAT
+// FUNCIONS D'UTILITAT PER A TAULES DINÀMIQUES
 // --------------------------------------------------------------------------       
 export function renderTable(data, tableContainer) {
   tableContainer.innerHTML = "";
@@ -54,14 +54,14 @@ export function renderTable(data, tableContainer) {
 }
 /**
  * Prepara les dades per a la inserció a la taula 'documents'.
- * @param {object} extractedData - L'objecte de dades extretes (amb .rows).
- * @param {string} filePath - La ruta al Supabase Storage.
- * @param {string} userId - L'ID de l'usuari que envia.
- * @param {string} signerName - El nom del firmant (Tècnic).
- * @returns {object} Un objecte compatible amb la taula 'documents'.
+ * @param {object} extractedData 
+ * @param {string} filePath 
+ * @param {string} userId 
+ * @param {string} signerName 
+ * @returns {object} 
  */
 export function prepareDataForDB(extractedData, filePath, userId, signerName) {
-  const extractedFlatData = {}; // Objecte aplanat per a la columna data_extreta
+  const extractedFlatData = {}; 
   
   // 1. Aplanar les dades com feies abans
   extractedData.rows.forEach((row) => {
@@ -77,7 +77,7 @@ export function prepareDataForDB(extractedData, filePath, userId, signerName) {
     extractedFlatData[dbKey] = value;
   });
   
-  // 2. Afegir el nom del signant a l'objecte JSON (per a la traça/auditoria)
+  // 2. Afegir el nom del signant a l'objecte JSON 
   extractedFlatData.signer_name = signerName;
 
   // 3. Retornar l'estructura COMPLETA per a la taula 'documents'
@@ -87,8 +87,7 @@ export function prepareDataForDB(extractedData, filePath, userId, signerName) {
     estat_document: 'Enviat', // Per defecte
     estat_aprovacio: 'Pendent', // Per defecte
     data_extreta: JSON.stringify(extractedFlatData), // Objecte JSON
-    // El 'títol' es pot treure de extractedFlatData si existeix
-  };
+   };
 }
 
 // --------------------------------------------------------------------------
@@ -205,14 +204,11 @@ export async function extractDataFromPDF(file) {
   // d) Títol de l'informe: Captura el títol complet que comença per "INFORME TECNIC."
   const titleDefault = "Títol no trobat, revisió manual necessària";
   let extractedTitle = titleDefault;
-  // 1. INTENT DE CAPTURA FORMAL (Patró millorat per ser menys restrictiu)
-  // Afegim el text "INFORME TECNIC." a la captura si l'hem trobat.
   const formalTitleMatch = fullText.match(
     /INFORME\s+TECNIC\.\s*(.*?)(?=\n|TÈCNIC|JURIDIC|total|PROVEÏDOR|$)/i
   );
 
 if (formalTitleMatch && formalTitleMatch[1]) {
-  // El grup [1] conté la frase completa, p. ex.: "CONTRACTES DERIVATS DE LICITACIONS PREVIES"
   let descriptivePhrase = formalTitleMatch[1].trim().toUpperCase();
 
   // --- LÒGICA DE TRADUCCIÓ/NORMALITZACIÓ ---
@@ -232,10 +228,9 @@ if (formalTitleMatch && formalTitleMatch[1]) {
   } else if (descriptivePhrase.includes("LCSP")) {
     extractedTitle = "NoLCSP";
   }
-  // Si no es troba cap paraula clau, extractedTitle es manté com a titleDefault
-}
+ }
 
-  // 2. FALLBACK A TÍTOL DESCRIPTIU (Manté el codi anterior)
+  // Si no s'ha pogut extreure amb el patró formal, intentar amb el patró robust
   if (extractedTitle === titleDefault) {
     // Lògica per trobar el valor entre "num mod A" i "total € (sense IVA)"
     const descriptiveMatch = fullText.match(
@@ -253,7 +248,7 @@ if (formalTitleMatch && formalTitleMatch[1]) {
   // 3. ASSIGNACIÓ FINAL
   tempExtracted["Titol de l'informe"] = extractedTitle;
 
-  // e) Número Mod A (Robust)
+  // e) Número Mod A 
   let numModA = "N/D";
   // 1. Cerca del patró aïllat
   const isolatedModAMatch = fullText.match(/\b([A-D]\d{3})\b/i);
@@ -271,7 +266,7 @@ if (formalTitleMatch && formalTitleMatch[1]) {
   }
   tempExtracted["Número Mod A"] = numModA;
 
-  // f) Total € (sense IVA) (Robust)
+  // f) Total € (sense IVA) 
   let totalSenseIVA = "N/D";
   const senseIVAMatch = fullText.match(
     new RegExp(
@@ -284,7 +279,7 @@ if (formalTitleMatch && formalTitleMatch[1]) {
   }
   tempExtracted["Total € (sense IVA)"] = normalizePrice(totalSenseIVA);
 
-  // g) Total € (IVA inclòs) (Robust)
+  // g) Total € (IVA inclòs) 
   let totalAmbIVA = "N/D";
   const ambIVAMatch = fullText.match(
     new RegExp(
